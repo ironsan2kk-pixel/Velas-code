@@ -1,0 +1,11 @@
+// Page exports - lazy loaded in App.tsx
+export { default as Dashboard } from './Dashboard';
+export { default as Positions } from './Positions';
+export { default as History } from './History';
+export { default as Signals } from './Signals';
+export { default as Pairs } from './Pairs';
+export { default as Analytics } from './Analytics';
+export { default as Backtest } from './Backtest';
+export { default as Settings } from './Settings';
+export { default as Alerts } from './Alerts';
+export { default as System } from './System';

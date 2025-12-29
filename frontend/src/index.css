@@ -1,0 +1,384 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ===== Base Styles ===== */
+@layer base {
+  * {
+    @apply border-dark-border;
+  }
+  
+  body {
+    @apply bg-dark-bg-primary text-dark-text-primary font-sans antialiased;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
+
+  /* Light theme */
+  .light body,
+  .light {
+    @apply bg-light-bg-primary text-light-text-primary;
+  }
+
+  .light * {
+    @apply border-light-border;
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    @apply w-2 h-2;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-dark-bg-secondary rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-dark-border rounded-full hover:bg-dark-border-light;
+  }
+
+  .light ::-webkit-scrollbar-track {
+    @apply bg-light-bg-secondary;
+  }
+
+  .light ::-webkit-scrollbar-thumb {
+    @apply bg-light-border hover:bg-light-border-light;
+  }
+
+  /* Selection */
+  ::selection {
+    @apply bg-accent-blue/30 text-dark-text-primary;
+  }
+
+  .light ::selection {
+    @apply bg-accent-blue/30 text-light-text-primary;
+  }
+}
+
+/* ===== Component Styles ===== */
+@layer components {
+  /* Card */
+  .card {
+    @apply bg-dark-bg-card border border-dark-border rounded-lg p-4 transition-all duration-200;
+  }
+
+  .card-hover:hover {
+    @apply border-dark-border-light shadow-card-hover;
+  }
+
+  .light .card {
+    @apply bg-light-bg-card border-light-border;
+  }
+
+  .light .card-hover:hover {
+    @apply border-light-border-light;
+  }
+
+  /* Button variants */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-md font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-dark-bg-primary disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-primary {
+    @apply bg-accent-blue text-white hover:bg-accent-blue-light focus:ring-accent-blue;
+  }
+
+  .btn-success {
+    @apply bg-accent-green text-white hover:bg-accent-green-light focus:ring-accent-green;
+  }
+
+  .btn-danger {
+    @apply bg-accent-red text-white hover:bg-accent-red-light focus:ring-accent-red;
+  }
+
+  .btn-secondary {
+    @apply bg-dark-bg-tertiary text-dark-text-primary hover:bg-dark-border focus:ring-dark-border;
+  }
+
+  .btn-ghost {
+    @apply text-dark-text-secondary hover:text-dark-text-primary hover:bg-dark-bg-tertiary focus:ring-dark-border;
+  }
+
+  .light .btn-secondary {
+    @apply bg-light-bg-tertiary text-light-text-primary hover:bg-light-border;
+  }
+
+  .light .btn-ghost {
+    @apply text-light-text-secondary hover:text-light-text-primary hover:bg-light-bg-tertiary;
+  }
+
+  .light .btn {
+    @apply focus:ring-offset-light-bg-primary;
+  }
+
+  /* Input */
+  .input {
+    @apply w-full px-3 py-2 bg-dark-bg-primary border border-dark-border rounded-md text-dark-text-primary placeholder:text-dark-text-muted focus:outline-none focus:ring-2 focus:ring-accent-blue focus:border-transparent transition-all duration-200;
+  }
+
+  .light .input {
+    @apply bg-light-bg-primary border-light-border text-light-text-primary placeholder:text-light-text-muted;
+  }
+
+  /* Badge */
+  .badge {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full;
+  }
+
+  .badge-green {
+    @apply bg-accent-green/20 text-accent-green-light;
+  }
+
+  .badge-red {
+    @apply bg-accent-red/20 text-accent-red-light;
+  }
+
+  .badge-blue {
+    @apply bg-accent-blue/20 text-accent-blue-light;
+  }
+
+  .badge-yellow {
+    @apply bg-accent-yellow/20 text-accent-yellow-light;
+  }
+
+  .badge-purple {
+    @apply bg-accent-purple/20 text-accent-purple-light;
+  }
+
+  .badge-gray {
+    @apply bg-dark-bg-tertiary text-dark-text-secondary;
+  }
+
+  .light .badge-gray {
+    @apply bg-light-bg-tertiary text-light-text-secondary;
+  }
+
+  /* Status dot */
+  .status-dot {
+    @apply w-2 h-2 rounded-full;
+  }
+
+  .status-dot-online {
+    @apply bg-accent-green animate-pulse-slow;
+  }
+
+  .status-dot-offline {
+    @apply bg-accent-red;
+  }
+
+  .status-dot-warning {
+    @apply bg-accent-yellow animate-pulse-slow;
+  }
+
+  /* Table */
+  .table {
+    @apply w-full text-sm;
+  }
+
+  .table th {
+    @apply px-4 py-3 text-left font-medium text-dark-text-secondary bg-dark-bg-secondary;
+  }
+
+  .table td {
+    @apply px-4 py-3 border-t border-dark-border;
+  }
+
+  .table tbody tr:hover {
+    @apply bg-dark-bg-tertiary;
+  }
+
+  .light .table th {
+    @apply text-light-text-secondary bg-light-bg-secondary;
+  }
+
+  .light .table td {
+    @apply border-light-border;
+  }
+
+  .light .table tbody tr:hover {
+    @apply bg-light-bg-tertiary;
+  }
+
+  /* Monospace text for numbers */
+  .mono {
+    @apply font-mono tabular-nums;
+  }
+
+  /* Trading colors */
+  .text-long {
+    @apply text-accent-green-light;
+  }
+
+  .text-short {
+    @apply text-accent-red-light;
+  }
+
+  .text-profit {
+    @apply text-accent-green-light;
+  }
+
+  .text-loss {
+    @apply text-accent-red-light;
+  }
+
+  .bg-long {
+    @apply bg-accent-green/20;
+  }
+
+  .bg-short {
+    @apply bg-accent-red/20;
+  }
+
+  /* Sidebar navigation */
+  .nav-item {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-md text-dark-text-secondary hover:text-dark-text-primary hover:bg-dark-bg-tertiary transition-colors duration-200;
+  }
+
+  .nav-item-active {
+    @apply text-dark-text-primary bg-dark-bg-tertiary border-l-2 border-accent-blue -ml-0.5 pl-[14px];
+  }
+
+  .light .nav-item {
+    @apply text-light-text-secondary hover:text-light-text-primary hover:bg-light-bg-tertiary;
+  }
+
+  .light .nav-item-active {
+    @apply text-light-text-primary bg-light-bg-tertiary;
+  }
+
+  /* Metric card */
+  .metric-card {
+    @apply card flex flex-col gap-1;
+  }
+
+  .metric-label {
+    @apply text-xs font-medium text-dark-text-muted uppercase tracking-wide;
+  }
+
+  .metric-value {
+    @apply text-2xl font-bold mono;
+  }
+
+  .metric-change {
+    @apply text-xs font-medium;
+  }
+
+  .light .metric-label {
+    @apply text-light-text-muted;
+  }
+}
+
+/* ===== Utility Styles ===== */
+@layer utilities {
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Gradient backgrounds */
+  .gradient-dark {
+    background: linear-gradient(180deg, #161b22 0%, #0d1117 100%);
+  }
+
+  .gradient-profit {
+    background: linear-gradient(135deg, rgba(35, 134, 54, 0.2) 0%, rgba(35, 134, 54, 0.05) 100%);
+  }
+
+  .gradient-loss {
+    background: linear-gradient(135deg, rgba(218, 54, 51, 0.2) 0%, rgba(218, 54, 51, 0.05) 100%);
+  }
+
+  /* Glass effect */
+  .glass {
+    @apply bg-dark-bg-secondary/80 backdrop-blur-lg;
+  }
+
+  .light .glass {
+    @apply bg-light-bg-secondary/80;
+  }
+
+  /* Text truncate multiline */
+  .line-clamp-1 {
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Safe area padding for mobile */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+}
+
+/* ===== Animation Keyframes ===== */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.skeleton {
+  @apply relative overflow-hidden bg-dark-bg-tertiary rounded;
+}
+
+.skeleton::after {
+  content: '';
+  @apply absolute inset-0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.05),
+    transparent
+  );
+  animation: shimmer 2s infinite;
+}
+
+.light .skeleton {
+  @apply bg-light-bg-tertiary;
+}
+
+.light .skeleton::after {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(0, 0, 0, 0.05),
+    transparent
+  );
+}
+
+/* ===== Chart Styling ===== */
+.recharts-cartesian-grid line {
+  stroke: #30363d;
+}
+
+.light .recharts-cartesian-grid line {
+  stroke: #d0d7de;
+}
+
+.recharts-tooltip-wrapper {
+  outline: none;
+}
+
+/* ===== Lightweight Charts Styling ===== */
+.tv-lightweight-charts {
+  @apply rounded-lg overflow-hidden;
+}
