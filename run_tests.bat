@@ -1,11 +1,10 @@
 @echo off
-chcp 65001 >nul
 cd /d "%~dp0"
 
 echo.
-echo ╔═══════════════════════════════════════════╗
-echo ║    VELAS-07 Telegram Module Tests         ║
-echo ╚═══════════════════════════════════════════╝
+echo ========================================
+echo    VELAS-07 Telegram Module Tests
+echo ========================================
 echo.
 
 :: Check Python
@@ -17,6 +16,9 @@ if errorlevel 1 (
     exit /b 1
 )
 
+echo [INFO] Python found
+python --version
+
 :: Create venv if not exists
 if not exist "venv" (
     echo [INFO] Creating virtual environment...
@@ -24,17 +26,18 @@ if not exist "venv" (
 )
 
 :: Activate venv
+echo [INFO] Activating venv...
 call venv\Scripts\activate.bat
 
 :: Install dependencies
 echo [INFO] Installing dependencies...
 pip install --quiet --upgrade pip
-pip install --quiet pytest pytest-asyncio python-telegram-bot>=20.7
+pip install --quiet pytest pytest-asyncio python-telegram-bot
 
 :: Run tests
 echo.
 echo [INFO] Running tests...
-echo ─────────────────────────────────────────────
+echo ----------------------------------------
 echo.
 
 python -m pytest tests/test_telegram.py -v --tb=short
@@ -43,14 +46,14 @@ python -m pytest tests/test_telegram.py -v --tb=short
 set EXITCODE=%ERRORLEVEL%
 
 echo.
-echo ─────────────────────────────────────────────
+echo ----------------------------------------
 
 if %EXITCODE% EQU 0 (
     echo [SUCCESS] All tests passed!
 ) else (
     echo [FAILED] Some tests failed!
 )
-pause
+
 echo.
 pause
 exit /b %EXITCODE%
