@@ -1,1 +1,1 @@
-"""VELAS Telegram - Bot & Notifications"""
+"""VELAS telegram module - TODO."""

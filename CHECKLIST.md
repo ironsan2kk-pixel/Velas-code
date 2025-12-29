@@ -1,8 +1,8 @@
 # VELAS v2 — ЧЕКЛИСТ
 
 **Последнее обновление:** 2024-12-29  
-**Текущая фаза:** VELAS-05  
-**Прогресс:** 5/12 фаз
+**Текущая фаза:** VELAS-06  
+**Прогресс:** 6/12 фаз
 
 ---
 
@@ -16,6 +16,7 @@
 | 2024-12-29 | velas-03 | Backtest: engine, metrics, trade | 48 тестов |
 | 2024-12-29 | velas-04 | Optimizer: optimizer, walk_forward, robustness | — |
 | 2024-12-29 | velas-05 | Presets: volatility, presets, generator | — |
+| 2024-12-29 | velas-06 | Portfolio: correlation, risk, manager; Live: engine, state | 45+ тестов |
 
 ---
 
@@ -140,16 +141,32 @@
 
 ---
 
-## Фаза 6: Live Engine [TODO]
+## Фаза 6: Portfolio & Live Engine [DONE]
 
-### 6.1 Live Engine
-- [ ] backend/live/engine.py
-- [ ] Position tracker
-- [ ] Signal manager
+### 6.1 Portfolio Module
+- [x] backend/portfolio/correlation.py (CorrelationCalculator, SectorFilter)
+- [x] backend/portfolio/risk.py (PositionSizer, PortfolioHeatTracker)
+- [x] backend/portfolio/manager.py (PortfolioManager, Position)
+- [x] Секторная диверсификация (8 секторов)
+- [x] Корреляционный фильтр (threshold 0.7)
+- [x] Portfolio Heat tracking (max 8%)
+- [x] Position sizing (Fixed % Risk, Volatility Adjusted, Kelly)
 
-### 6.2 State
-- [ ] Персистентное состояние
-- [ ] Восстановление после рестарта
+### 6.2 Live Engine
+- [x] backend/live/engine.py (LiveEngine, EngineConfig)
+- [x] backend/live/position_tracker.py (PositionTracker, TrackingEvent)
+- [x] backend/live/signal_manager.py (SignalManager, EnrichedSignal)
+
+### 6.3 State Management
+- [x] backend/live/state.py (StateManager, SQLite)
+- [x] Персистентное состояние позиций
+- [x] История сигналов и сделок
+- [x] Восстановление после рестарта
+
+### 6.4 Тесты
+- [x] tests/test_portfolio.py (25+ тестов)
+- [x] tests/test_live.py (20+ тестов)
+- [x] run_tests.bat / run_tests.sh
 
 ---
 
@@ -177,14 +194,14 @@
 ## 📊 ОБЩИЙ ПРОГРЕСС
 
 ```
-[████████████████░░░░░░░░░░░░░░░░░░░░░░░░] 42%
+[██████████████████████████░░░░░░░░░░░░░░] 50%
 
 ✅ VELAS-01: Infrastructure
 ✅ VELAS-02: Data Engine  
 ✅ VELAS-03: Backtest Engine
 ✅ VELAS-04: Optimizer
-✅ VELAS-05: Filters & Presets ← CURRENT
-⬜ VELAS-06: Live Engine
+✅ VELAS-05: Filters & Presets
+✅ VELAS-06: Portfolio & Live Engine ← CURRENT
 ⬜ VELAS-07: Telegram
 ⬜ VELAS-08: Frontend Base
 ⬜ VELAS-09: Frontend Pages 1
@@ -257,3 +274,102 @@ generator.generate_all()  # 180 пресетов
 ---
 
 *Обновлено: 2024-12-29*
+
+---
+
+## 📦 СТРУКТУРА МОДУЛЯ VELAS-06
+
+```
+backend/portfolio/
+├── __init__.py          ← Экспорт всех компонентов
+├── correlation.py       ← Корреляции, секторы, фильтры
+├── risk.py              ← Position sizing, Portfolio heat
+└── manager.py           ← PortfolioManager, Position
+
+backend/live/
+├── __init__.py          ← Экспорт всех компонентов
+├── engine.py            ← LiveEngine (главный движок)
+├── signal_manager.py    ← SignalManager, EnrichedSignal
+├── position_tracker.py  ← PositionTracker, события
+└── state.py             ← StateManager (SQLite)
+
+tests/
+├── conftest.py          ← Pytest fixtures
+├── test_portfolio.py    ← Тесты Portfolio модуля
+└── test_live.py         ← Тесты Live модуля
+
+run_tests.bat            ← Windows runner
+run_tests.sh             ← Unix runner
+```
+
+---
+
+## 🎯 КЛЮЧЕВЫЕ КОМПОНЕНТЫ VELAS-06
+
+### PortfolioManager
+```python
+from backend.portfolio import PortfolioManager, RiskLimits
+
+manager = PortfolioManager(
+    balance=10000,
+    risk_limits=RiskLimits(
+        max_positions=5,
+        max_portfolio_heat=8.0,
+        risk_per_trade=2.0,
+        max_per_sector=2,
+        correlation_threshold=0.7,
+    ),
+    leverage=10,
+)
+
+# Проверяем можно ли открыть
+can_open, reason = manager.can_open_position("BTCUSDT")
+
+# Рассчитываем размер
+size = manager.calculate_position_size(
+    symbol="BTCUSDT",
+    entry_price=42000,
+    stop_loss=40000,
+)
+
+# Открываем позицию
+position = manager.open_position(...)
+```
+
+### LiveEngine
+```python
+from backend.live import LiveEngine, EngineConfig
+
+config = EngineConfig(
+    symbols=["BTCUSDT", "ETHUSDT"],
+    timeframes=["30m", "1h", "2h"],
+    trading_mode="paper",
+    initial_balance=10000,
+)
+
+engine = LiveEngine(config)
+
+# Callbacks
+engine.on_signal = lambda s: send_to_telegram(s)
+engine.on_position_event = lambda e: log_event(e)
+
+# Запуск
+await engine.start()
+```
+
+### StateManager
+```python
+from backend.live import StateManager
+
+state = StateManager()
+
+# Сохраняем позицию
+state.save_position(position.to_dict())
+
+# Загружаем открытые
+positions = state.get_open_positions()
+
+# История сделок
+history = state.get_trade_history(symbol="BTCUSDT")
+stats = state.get_trade_stats()
+```

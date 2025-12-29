@@ -1,24 +1,63 @@
-VELAS-05: Filters & Presets
+# VELAS-06: Portfolio & Live Engine
 
-Добавлен анализатор волатильности и система управления пресетами.
+## Commit Message
+```
+feat(velas-06): add portfolio management and live trading engine
 
-Новые файлы:
-- backend/core/volatility.py - ATR-based volatility analyzer
-- backend/core/presets.py - Preset manager & generator
-- backend/core/__init__.py - Module exports
-- scripts/generate_presets.py - CLI preset generator
-- tests/test_volatility.py - Volatility tests
-- tests/test_presets.py - Preset tests
-- run_tests.bat - Windows test runner
-- run_tests.sh - Unix test runner
+- Add portfolio module with correlation, risk, and position management
+- Add live engine with signal manager, position tracker, and state persistence
+- Implement sector diversification (8 sectors, max 2 per sector)
+- Implement portfolio heat tracking (max 8%)
+- Add position sizing (Fixed %, Volatility Adjusted, Kelly)
+- Add SQLite-based state management for crash recovery
+- Add comprehensive tests for portfolio and live modules
+```
 
-Функционал:
-- VolatilityRegime (LOW/NORMAL/HIGH) на основе ATR Ratio
-- Автоматическое определение режима волатильности
-- Множители TP/SL для каждого режима
-- TradingPreset dataclass с полной конфигурацией
-- PresetManager для YAML загрузки/сохранения
-- PresetGenerator для генерации 180 пресетов (20×3×3)
-- CLI скрипт с опциями --symbol, --dry-run, --summary
+## Files Changed
 
-180 пресетов = 20 пар × 3 таймфрейма × 3 режима волатильности
+### New Files (Portfolio)
+- backend/portfolio/__init__.py
+- backend/portfolio/correlation.py (CorrelationCalculator, SectorFilter)
+- backend/portfolio/risk.py (PositionSizer, PortfolioHeatTracker)
+- backend/portfolio/manager.py (PortfolioManager, Position)
+
+### New Files (Live)
+- backend/live/__init__.py
+- backend/live/engine.py (LiveEngine, EngineConfig)
+- backend/live/signal_manager.py (SignalManager, EnrichedSignal)
+- backend/live/position_tracker.py (PositionTracker, TrackingEvent)
+- backend/live/state.py (StateManager, SQLite persistence)
+
+### New Files (Tests)
+- tests/conftest.py
+- tests/test_portfolio.py
+- tests/test_live.py
+
+### Updated Files
+- CHECKLIST.md (updated progress to 50%, 6/12 phases)
+
+## Key Features
+
+### Portfolio Management
+- Max 5 simultaneous positions
+- 8 sectors: BTC, ETH, L1, L2, DEFI, OLD, MEME, CEX
+- Correlation filter (threshold 0.7)
+- Portfolio heat tracking (max 8% total risk)
+- Position sizing with volatility adjustment
+
+### Live Engine
+- WebSocket integration for real-time data
+- Signal generation on closed candles
+- Automatic TP/SL tracking with cascade stops
+- State persistence in SQLite database
+- Crash recovery with position restoration
+
+### Risk Management
+- Fixed percent risk per trade (default 2%)
+- Kelly criterion support
+- Volatility-adjusted position sizing
+- Sector diversification limits
+
+## Next Steps
+- VELAS-07: Telegram integration (Cornix format)
+- VELAS-08: Frontend base (React + TypeScript)

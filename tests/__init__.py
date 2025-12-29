@@ -1,1 +1,1 @@
-"""VELAS Tests Package."""
+"""VELAS Test Suite."""

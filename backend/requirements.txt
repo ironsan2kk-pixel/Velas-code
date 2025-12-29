@@ -1,70 +1,36 @@
-# ============================================
-# VELAS Trading System - Python Dependencies
-# ============================================
-# 
-# Установка: pip install -r requirements.txt
-#
-# ============================================
+# VELAS v2 - Backend Dependencies
 
-# === Web Framework ===
-fastapi>=0.109.0
-uvicorn[standard]>=0.27.0
-websockets>=12.0
-python-multipart>=0.0.6
+# Core
+pandas>=2.0.0
+numpy>=1.24.0
+pyyaml>=6.0
 
-# === Database ===
-sqlalchemy>=2.0.25
-alembic>=1.13.0
-aiosqlite>=0.19.0
+# Technical Analysis
+ta>=0.10.0
 
-# === Validation ===
-pydantic>=2.5.0
-pydantic-settings>=2.1.0
+# Binance API
+python-binance>=1.0.17
+websockets>=11.0
 
-# === Data Processing ===
-pandas>=2.1.0
-numpy>=1.26.0
-pyarrow>=14.0.0
+# Database
+sqlalchemy>=2.0.0
 
-# === Technical Analysis ===
-ta>=0.11.0
-# ta-lib>=0.4.28  # Требует отдельной установки библиотеки
+# API Server
+fastapi>=0.100.0
+uvicorn>=0.22.0
+pydantic>=2.0.0
 
-# === Binance API ===
-python-binance>=1.0.19
-aiohttp>=3.9.0
+# Async
+aiohttp>=3.8.0
+asyncio-throttle>=1.0.0
 
-# === Telegram ===
-python-telegram-bot>=20.7
+# Testing
+pytest>=7.0.0
+pytest-asyncio>=0.21.0
 
-# === Configuration ===
-pyyaml>=6.0.1
+# Telegram (optional)
+python-telegram-bot>=20.0
+
+# Utilities
 python-dotenv>=1.0.0
-
-# === Logging ===
-loguru>=0.7.2
-
-# === Date/Time ===
-python-dateutil>=2.8.2
-pytz>=2024.1
-
-# === Async ===
-asyncio-throttle>=1.0.2
-aiocache>=0.12.2
-
-# === Testing ===
-pytest>=7.4.0
-pytest-asyncio>=0.23.0
-pytest-cov>=4.1.0
-httpx>=0.26.0
-
-# === Code Quality ===
-black>=23.12.0
-isort>=5.13.0
-flake8>=7.0.0
-mypy>=1.8.0
-
-# === Utilities ===
-click>=8.1.7
-tqdm>=4.66.0
-tabulate>=0.9.0
+loguru>=0.7.0
