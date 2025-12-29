@@ -1,14 +1,17 @@
 {
-  "name": "velas-dashboard",
+  "name": "velas-desktop",
   "version": "1.0.0",
+  "description": "VELAS Trading System - Desktop Application",
+  "main": "../electron/main.js",
   "type": "module",
-  "description": "VELAS Trading System Dashboard",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "typecheck": "tsc --noEmit"
+    "electron": "electron ..",
+    "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:5173 && electron ..\"",
+    "start": "npm run build && electron ..",
+    "dist": "npm run build && electron-builder"
   },
   "dependencies": {
     "react": "^18.2.0",
@@ -32,6 +35,9 @@
     "@typescript-eslint/parser": "^6.19.0",
     "@vitejs/plugin-react": "^4.2.1",
     "autoprefixer": "^10.4.17",
+    "concurrently": "^8.2.2",
+    "electron": "^28.1.0",
+    "electron-builder": "^24.9.1",
     "eslint": "^8.56.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.5",
@@ -39,6 +45,36 @@
     "tailwindcss": "^3.4.1",
     "typescript": "^5.3.3",
     "vite": "^5.0.12",
-    "vite-plugin-pwa": "^0.17.4"
+    "vite-plugin-pwa": "^0.17.4",
+    "wait-on": "^7.2.0"
+  },
+  "build": {
+    "appId": "com.velas.trading",
+    "productName": "VELAS Trading System",
+    "directories": {
+      "output": "../dist"
+    },
+    "files": [
+      "dist/**/*",
+      "../electron/**/*",
+      "../backend/**/*",
+      "../data/**/*",
+      "../config/**/*",
+      "../scripts/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "../backend",
+        "to": "backend"
+      }
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "public/icons/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
   }
 }
