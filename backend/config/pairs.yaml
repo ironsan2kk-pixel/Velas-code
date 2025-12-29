@@ -1,0 +1,185 @@
+# ============================================
+# VELAS Trading System - Trading Pairs
+# ============================================
+# 
+# 20 торговых пар, сгруппированных по секторам
+# Все пары торгуются против USDT на Binance Futures
+#
+# ============================================
+
+# === Таймфреймы ===
+timeframes:
+  - "30m"
+  - "1h"  
+  - "2h"
+
+# === Режимы волатильности ===
+volatility_regimes:
+  low:
+    atr_ratio_max: 0.7
+    tp_multiplier: 0.8
+    sl_multiplier: 0.8
+  normal:
+    atr_ratio_min: 0.7
+    atr_ratio_max: 1.3
+    tp_multiplier: 1.0
+    sl_multiplier: 1.0
+  high:
+    atr_ratio_min: 1.3
+    tp_multiplier: 1.3
+    sl_multiplier: 1.2
+
+# === Торговые пары ===
+pairs:
+  # --- BTC ---
+  - symbol: "BTCUSDT"
+    name: "Bitcoin"
+    sector: "BTC"
+    enabled: true
+    
+  # --- ETH ---
+  - symbol: "ETHUSDT"
+    name: "Ethereum"
+    sector: "ETH"
+    enabled: true
+    
+  # --- CEX ---
+  - symbol: "BNBUSDT"
+    name: "BNB"
+    sector: "CEX"
+    enabled: true
+    
+  # --- Layer 1 ---
+  - symbol: "SOLUSDT"
+    name: "Solana"
+    sector: "L1"
+    enabled: true
+    
+  - symbol: "AVAXUSDT"
+    name: "Avalanche"
+    sector: "L1"
+    enabled: true
+    
+  - symbol: "ATOMUSDT"
+    name: "Cosmos"
+    sector: "L1"
+    enabled: true
+    
+  - symbol: "NEARUSDT"
+    name: "Near Protocol"
+    sector: "L1"
+    enabled: true
+    
+  - symbol: "APTUSDT"
+    name: "Aptos"
+    sector: "L1"
+    enabled: true
+    
+  # --- Layer 2 ---
+  - symbol: "MATICUSDT"
+    name: "Polygon"
+    sector: "L2"
+    enabled: true
+    
+  - symbol: "ARBUSDT"
+    name: "Arbitrum"
+    sector: "L2"
+    enabled: true
+    
+  - symbol: "OPUSDT"
+    name: "Optimism"
+    sector: "L2"
+    enabled: true
+    
+  # --- DeFi ---
+  - symbol: "LINKUSDT"
+    name: "Chainlink"
+    sector: "DEFI"
+    enabled: true
+    
+  - symbol: "UNIUSDT"
+    name: "Uniswap"
+    sector: "DEFI"
+    enabled: true
+    
+  - symbol: "INJUSDT"
+    name: "Injective"
+    sector: "DEFI"
+    enabled: true
+    
+  # --- Old / Classic ---
+  - symbol: "XRPUSDT"
+    name: "Ripple"
+    sector: "OLD"
+    enabled: true
+    
+  - symbol: "ADAUSDT"
+    name: "Cardano"
+    sector: "OLD"
+    enabled: true
+    
+  - symbol: "DOTUSDT"
+    name: "Polkadot"
+    sector: "OLD"
+    enabled: true
+    
+  - symbol: "LTCUSDT"
+    name: "Litecoin"
+    sector: "OLD"
+    enabled: true
+    
+  - symbol: "ETCUSDT"
+    name: "Ethereum Classic"
+    sector: "OLD"
+    enabled: true
+    
+  # --- Meme ---
+  - symbol: "DOGEUSDT"
+    name: "Dogecoin"
+    sector: "MEME"
+    enabled: true
+
+# === Секторы (для диверсификации) ===
+sectors:
+  BTC:
+    name: "Bitcoin"
+    max_positions: 1
+    pairs: ["BTCUSDT"]
+    
+  ETH:
+    name: "Ethereum"
+    max_positions: 1
+    pairs: ["ETHUSDT"]
+    
+  L1:
+    name: "Layer 1"
+    max_positions: 2
+    pairs: ["SOLUSDT", "AVAXUSDT", "ATOMUSDT", "NEARUSDT", "APTUSDT"]
+    
+  L2:
+    name: "Layer 2"
+    max_positions: 2
+    pairs: ["MATICUSDT", "ARBUSDT", "OPUSDT"]
+    
+  DEFI:
+    name: "DeFi"
+    max_positions: 2
+    pairs: ["LINKUSDT", "UNIUSDT", "INJUSDT"]
+    
+  OLD:
+    name: "Classic"
+    max_positions: 2
+    pairs: ["XRPUSDT", "ADAUSDT", "DOTUSDT", "LTCUSDT", "ETCUSDT"]
+    
+  MEME:
+    name: "Meme"
+    max_positions: 1
+    pairs: ["DOGEUSDT"]
+    
+  CEX:
+    name: "CEX Token"
+    max_positions: 1
+    pairs: ["BNBUSDT"]
+
+# === Статистика ===
+# Всего: 20 пар × 3 таймфрейма × 3 режима = 180 пресетов

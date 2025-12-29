@@ -1,0 +1,94 @@
+# ============================================
+# VELAS Trading System - Configuration
+# ============================================
+# 
+# ИНСТРУКЦИЯ:
+# 1. Скопируйте этот файл в C:\velas\config.yaml
+# 2. Заполните свои значения (API ключи и т.д.)
+# 3. НЕ коммитьте config.yaml в Git!
+#
+# ============================================
+
+# === Binance API ===
+binance:
+  api_key: "YOUR_BINANCE_API_KEY"
+  api_secret: "YOUR_BINANCE_API_SECRET"
+  testnet: false                    # true для тестовой сети
+  
+# === Telegram ===
+telegram:
+  bot_token: "YOUR_TELEGRAM_BOT_TOKEN"
+  chat_id: "-100123456789"          # ID канала для сигналов
+  enabled: true
+  
+# === Режим торговли ===
+trading:
+  mode: "paper"                     # paper / live
+  
+  # Риск-менеджмент
+  risk_per_trade: 2.0               # % от баланса на сделку
+  max_positions: 5                  # Макс. одновременных позиций
+  max_per_sector: 2                 # Макс. позиций в одном секторе
+  correlation_limit: 0.7            # Лимит корреляции между парами
+  
+  # Paper trading
+  initial_balance: 10000            # Начальный баланс для paper
+  
+# === Система ===
+system:
+  log_level: "INFO"                 # DEBUG / INFO / WARNING / ERROR
+  timezone: "Europe/Moscow"
+  
+  # Пути (локальные, НЕ в Git)
+  data_dir: "C:/velas/data"
+  logs_dir: "C:/velas/logs"
+  presets_dir: "C:/velas/data/presets"
+  
+# === Backend API ===
+api:
+  host: "0.0.0.0"
+  port: 8000
+  cors_origins:
+    - "http://localhost:5173"
+    - "http://127.0.0.1:5173"
+    
+# === Frontend ===
+frontend:
+  port: 5173
+  
+# === Database ===
+database:
+  # SQLite для простоты (путь локальный)
+  url: "sqlite:///C:/velas/data/velas.db"
+  
+# === Уведомления ===
+notifications:
+  # Какие события отправлять в Telegram
+  signal_new: true
+  position_opened: true
+  tp_hit: true
+  sl_hit: true
+  position_closed: true
+  sl_moved: true
+  daily_report: false
+  weekly_report: false
+  system_errors: true
+  
+  # Web Push
+  web_push_enabled: true
+  
+# === Бэктестинг ===
+backtest:
+  # Walk-Forward параметры
+  train_months: 6
+  test_months: 2
+  min_periods: 4
+  
+  # Критерии принятия пресета
+  min_sharpe: 1.2
+  max_sharpe: 2.5                   # Выше - подозрительно
+  min_winrate_tp1: 0.65
+  min_profit_factor: 1.4
+  max_drawdown: 0.15
+  min_trades: 30
+  min_robustness: 0.8

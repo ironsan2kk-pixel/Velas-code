@@ -1,0 +1,16 @@
+VELAS-01: Add project structure and configuration
+
+Infrastructure setup:
+- Backend folder structure (core, data, backtest, live, portfolio, telegram, api, db)
+- Frontend folder structure (components, pages, hooks, store, api, types, utils, i18n)
+- Python __init__.py files for all packages
+- .gitkeep for empty directories
+
+Configuration:
+- .gitignore (Python, Node, secrets, data files)
+- README.md with project description
+- config.example.yaml template
+- pairs.yaml with 20 trading pairs
+- requirements.txt with all Python dependencies
+- package.json with all frontend dependencies
+- CHECKLIST.md for progress tracking
