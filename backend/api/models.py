@@ -46,6 +46,13 @@ class SystemStatusEnum(str, Enum):
     MAINTENANCE = "maintenance"
 
 
+# Алиасы для совместимости
+Side = SideEnum
+Timeframe = TimeframeEnum
+VolatilityRegime = VolatilityRegimeEnum
+SignalStatus = SignalStatusEnum
+
+
 T = TypeVar("T")
 
 
@@ -63,6 +70,10 @@ class PaginatedResponse(BaseModel, Generic[T]):
     page_size: int
     total_pages: int
 
+
+# =============================================================================
+# POSITION MODELS
+# =============================================================================
 
 class PositionResponse(BaseModel):
     id: int
@@ -115,6 +126,10 @@ class PositionSummary(BaseModel):
     max_heat: float = 15.0
 
 
+# =============================================================================
+# SIGNAL MODELS
+# =============================================================================
+
 class SignalResponse(BaseModel):
     id: int
     symbol: str
@@ -141,6 +156,37 @@ class SignalResponse(BaseModel):
     class Config:
         from_attributes = True
 
+
+# Алиас Signal для pairs.py
+class Signal(BaseModel):
+    """Signal model для pairs.py"""
+    id: int
+    symbol: str
+    side: SideEnum
+    timeframe: TimeframeEnum
+    entry_price: float
+    current_price: Optional[float] = None
+    sl_price: float
+    tp1_price: Optional[float] = None
+    tp2_price: Optional[float] = None
+    tp3_price: Optional[float] = None
+    tp4_price: Optional[float] = None
+    tp5_price: Optional[float] = None
+    tp6_price: Optional[float] = None
+    status: SignalStatusEnum = SignalStatusEnum.PENDING
+    preset_id: Optional[str] = None
+    volatility_regime: VolatilityRegimeEnum = VolatilityRegimeEnum.NORMAL
+    confidence: Optional[float] = None
+    filters_passed: List[str] = Field(default_factory=list)
+    filters_failed: List[str] = Field(default_factory=list)
+    telegram_sent: bool = False
+    cornix_sent: bool = False
+    created_at: Optional[str] = None
+
+
+# =============================================================================
+# TRADE / HISTORY MODELS
+# =============================================================================
 
 class TradeHistoryResponse(BaseModel):
     id: int
@@ -176,6 +222,10 @@ class HistoryStats(BaseModel):
     avg_duration_minutes: Optional[float] = None
 
 
+# =============================================================================
+# DASHBOARD MODELS
+# =============================================================================
+
 class DashboardSummary(BaseModel):
     status: SystemStatusEnum
     balance: float
@@ -199,11 +249,95 @@ class DashboardMetrics(BaseModel):
     worst_pair: Optional[str] = None
 
 
+# =============================================================================
+# PAIRS MODELS
+# =============================================================================
+
+class Pair(BaseModel):
+    """Торговая пара."""
+    symbol: str
+    name: str
+    sector: str
+    current_price: float
+    price_change_24h: float
+    price_change_percent_24h: float
+    volume_24h: float
+    high_24h: float
+    low_24h: float
+    volatility_regime: VolatilityRegimeEnum = VolatilityRegimeEnum.NORMAL
+    atr_ratio: float = 1.0
+    has_active_position: bool = False
+    active_position_side: Optional[SideEnum] = None
+    last_signal_time: Optional[str] = None
+
+
+class PairDetail(Pair):
+    """Детальная информация о паре."""
+    signals_count_24h: int = 0
+    trades_count_24h: int = 0
+    win_rate_30d: float = 0.0
+    total_pnl_30d: float = 0.0
+    avg_trade_duration: int = 0
+    correlation_group: str = "Other"
+    active_timeframes: List[TimeframeEnum] = Field(default_factory=list)
+    preset_ids: List[str] = Field(default_factory=list)
+
+
+class OHLCV(BaseModel):
+    """Свеча OHLCV."""
+    timestamp: str
+    open: float
+    high: float
+    low: float
+    close: float
+    volume: float
+
+
+# =============================================================================
+# ANALYTICS MODELS
+# =============================================================================
+
 class EquityPoint(BaseModel):
-    timestamp: datetime
+    """Точка на графике equity."""
+    timestamp: str
     equity: float
     drawdown: float
 
+
+class MonthlyStats(BaseModel):
+    """Статистика за месяц."""
+    month: str
+    year: int
+    trades: int
+    win_rate: float
+    pnl: float
+    pnl_percent: float
+    best_day: float
+    worst_day: float
+    max_drawdown: float
+
+
+class PairStats(BaseModel):
+    """Статистика по паре."""
+    symbol: str
+    trades: int
+    win_rate: float
+    pnl: float
+    avg_pnl: float
+    profit_factor: float
+    sharpe: float
+    max_drawdown: float
+
+
+class CorrelationMatrix(BaseModel):
+    """Матрица корреляций."""
+    symbols: List[str]
+    matrix: List[List[float]]
+
+
+# =============================================================================
+# SYSTEM MODELS
+# =============================================================================
 
 class ComponentStatus(BaseModel):
     name: str

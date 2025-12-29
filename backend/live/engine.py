@@ -23,7 +23,7 @@ from backend.core.velas_core import VelasIndicator
 from backend.core.signals import SignalGenerator
 from backend.data.binance_ws import BinanceWebSocket
 from backend.portfolio.manager import PortfolioManager
-from backend.telegram.bot import TelegramNotifier
+from backend.tg_notifier.bot import TelegramNotifier
 from backend.db.database import SessionLocal
 from backend.db.models import PositionModel, SignalModel, SystemLogModel
 
@@ -353,3 +353,4 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+

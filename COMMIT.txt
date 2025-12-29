@@ -1,35 +1,47 @@
-VELAS-10: Integration Package - START.bat и Live Engine
+fix: критические исправления импортов и моделей
 
-Добавлено:
-- START.bat — главный лаунчер системы с меню (9 опций)
-- scripts/init_database.py — инициализация БД с тестовыми данными
-- scripts/download_history.py — скачивание свечей с Binance (20 пар × 3 TF)
-- config/config.example.yaml — пример конфигурации с комментариями
-- backend/live/engine.py — Live Trading Engine с WebSocket
-- backend/data/binance_ws.py — Binance WebSocket клиент
-- backend/telegram/bot.py — Telegram notifier с Cornix форматом
-- backend/core/velas_core.py — Индикатор Velas (каналы, ATR)
-- backend/core/signals.py — Генератор сигналов с фильтрами
-- backend/portfolio/manager.py — Portfolio Manager (риски, корреляции)
+## Исправлено
 
-START.bat функционал:
-[1] Запуск всего (Backend + Frontend + Live Engine)
-[2] Только Backend API
-[3] Только Frontend
-[4] Live Engine (торговля)
-[5] Установка зависимостей (Python + Node)
-[6] Скачивание истории свечей
-[7] Инициализация БД
-[8] Запуск тестов
-[9] Проверка статуса
+### 1. ImportError в pairs.py
+- Добавлены недостающие модели в `backend/api/models.py`:
+  - Pair, PairDetail, OHLCV
+  - Signal (расширенная версия)
+  - MonthlyStats, PairStats, CorrelationMatrix
+  - EquityPoint (исправлен timestamp на str)
+- Добавлены алиасы Side, Timeframe, VolatilityRegime, SignalStatus
 
-Интеграция:
-- Backend API (FastAPI) на порту 8000
-- Frontend (Vite) на порту 5173
-- SQLite база данных в data/velas.db
-- WebSocket для real-time обновлений
+### 2. ImportError в telegram/bot.py (конфликт имён)
+- Создана новая папка `backend/tg_notifier/` с исправленным bot.py
+- Старая `backend/telegram/` теперь содержит редирект на новый модуль
+- Исправлен импорт в `backend/live/engine.py`
 
-Следующие шаги:
-- WebSocket интеграция frontend ↔ backend
-- E2E тестирование
-- Production оптимизация
+### 3. Fake data → Real data
+- `backend/api/routes/pairs.py` - переписан для работы с БД
+- `backend/api/routes/analytics.py` - переписан для работы с БД
+- Убраны все `random.*` вызовы
+- Данные теперь из TradeModel, PositionModel, SignalModel
+
+## Файлы для замены
+
+```
+backend/
+├── api/
+│   ├── models.py          ← ЗАМЕНИТЬ (добавлены модели)
+│   └── routes/
+│       ├── pairs.py       ← ЗАМЕНИТЬ (реальные данные)
+│       └── analytics.py   ← ЗАМЕНИТЬ (реальные данные)
+├── tg_notifier/           ← ДОБАВИТЬ (новая папка)
+│   ├── __init__.py
+│   └── bot.py
+├── telegram/              ← ЗАМЕНИТЬ содержимое
+│   ├── __init__.py        ← Редирект
+│   └── bot.py             ← Редирект
+└── live/
+    └── engine.py          ← ЗАМЕНИТЬ (исправлен импорт)
+```
+
+## Инструкция
+
+1. Распаковать ZIP в C:\velas\code\Velas-code\ с заменой
+2. Проверить: `python -c "from backend.api.models import Pair; print('OK')"`
+3. Запустить: START.bat

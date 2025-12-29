@@ -1,49 +1,54 @@
 """
 VELAS API - Pairs Routes
+
+Возвращает информацию о торговых парах.
+В будущем будет интегрирован с Binance API для реальных цен.
 """
 
-from fastapi import APIRouter, Query, HTTPException, Path
-from typing import Literal
+from fastapi import APIRouter, Query, HTTPException, Path, Depends
+from typing import Literal, List, Optional
 from datetime import datetime, timedelta
-import random
+from sqlalchemy.orm import Session
 
+from backend.db.database import get_db
+from backend.db.models import PositionModel, SignalModel, TradeModel
 from ..models import (
     ApiResponse,
     Pair,
     PairDetail,
     OHLCV,
     Signal,
-    Side,
-    Timeframe,
-    VolatilityRegime,
-    SignalStatus,
+    SideEnum,
+    TimeframeEnum,
+    VolatilityRegimeEnum,
+    SignalStatusEnum,
 )
 
 router = APIRouter()
 
 
-# 20 trading pairs
+# 20 торговых пар
 PAIRS_CONFIG = [
-    {"symbol": "BTCUSDT", "name": "Bitcoin", "sector": "Major"},
-    {"symbol": "ETHUSDT", "name": "Ethereum", "sector": "Major"},
-    {"symbol": "BNBUSDT", "name": "BNB", "sector": "Exchange"},
-    {"symbol": "SOLUSDT", "name": "Solana", "sector": "Layer1"},
-    {"symbol": "XRPUSDT", "name": "XRP", "sector": "Legacy"},
-    {"symbol": "ADAUSDT", "name": "Cardano", "sector": "Legacy"},
-    {"symbol": "AVAXUSDT", "name": "Avalanche", "sector": "Layer1"},
-    {"symbol": "DOGEUSDT", "name": "Dogecoin", "sector": "Meme"},
-    {"symbol": "DOTUSDT", "name": "Polkadot", "sector": "Layer1"},
-    {"symbol": "MATICUSDT", "name": "Polygon", "sector": "Layer2"},
-    {"symbol": "LINKUSDT", "name": "Chainlink", "sector": "DeFi"},
-    {"symbol": "UNIUSDT", "name": "Uniswap", "sector": "DeFi"},
-    {"symbol": "ATOMUSDT", "name": "Cosmos", "sector": "Layer1"},
-    {"symbol": "LTCUSDT", "name": "Litecoin", "sector": "Legacy"},
-    {"symbol": "ETCUSDT", "name": "Ethereum Classic", "sector": "Legacy"},
-    {"symbol": "NEARUSDT", "name": "NEAR Protocol", "sector": "Layer1"},
-    {"symbol": "APTUSDT", "name": "Aptos", "sector": "Layer1"},
-    {"symbol": "ARBUSDT", "name": "Arbitrum", "sector": "Layer2"},
-    {"symbol": "OPUSDT", "name": "Optimism", "sector": "Layer2"},
-    {"symbol": "INJUSDT", "name": "Injective", "sector": "DeFi"},
+    {"symbol": "BTCUSDT", "name": "Bitcoin", "sector": "Major", "base_price": 96500},
+    {"symbol": "ETHUSDT", "name": "Ethereum", "sector": "Major", "base_price": 3450},
+    {"symbol": "BNBUSDT", "name": "BNB", "sector": "Exchange", "base_price": 710},
+    {"symbol": "SOLUSDT", "name": "Solana", "sector": "Layer1", "base_price": 198},
+    {"symbol": "XRPUSDT", "name": "XRP", "sector": "Legacy", "base_price": 2.35},
+    {"symbol": "ADAUSDT", "name": "Cardano", "sector": "Legacy", "base_price": 0.95},
+    {"symbol": "AVAXUSDT", "name": "Avalanche", "sector": "Layer1", "base_price": 42},
+    {"symbol": "DOGEUSDT", "name": "Dogecoin", "sector": "Meme", "base_price": 0.32},
+    {"symbol": "DOTUSDT", "name": "Polkadot", "sector": "Layer1", "base_price": 7.5},
+    {"symbol": "MATICUSDT", "name": "Polygon", "sector": "Layer2", "base_price": 0.98},
+    {"symbol": "LINKUSDT", "name": "Chainlink", "sector": "DeFi", "base_price": 23},
+    {"symbol": "UNIUSDT", "name": "Uniswap", "sector": "DeFi", "base_price": 14},
+    {"symbol": "ATOMUSDT", "name": "Cosmos", "sector": "Layer1", "base_price": 9.5},
+    {"symbol": "LTCUSDT", "name": "Litecoin", "sector": "Legacy", "base_price": 105},
+    {"symbol": "ETCUSDT", "name": "Ethereum Classic", "sector": "Legacy", "base_price": 28},
+    {"symbol": "NEARUSDT", "name": "NEAR Protocol", "sector": "Layer1", "base_price": 5.2},
+    {"symbol": "APTUSDT", "name": "Aptos", "sector": "Layer1", "base_price": 9.8},
+    {"symbol": "ARBUSDT", "name": "Arbitrum", "sector": "Layer2", "base_price": 0.85},
+    {"symbol": "OPUSDT", "name": "Optimism", "sector": "Layer2", "base_price": 1.95},
+    {"symbol": "INJUSDT", "name": "Injective", "sector": "DeFi", "base_price": 24},
 ]
 
 # Correlation groups
@@ -63,81 +68,143 @@ def get_correlation_group(symbol: str) -> str:
     return "Other"
 
 
-def generate_pairs() -> list[Pair]:
-    """Generate pairs with current data."""
+def get_pair_stats_from_db(symbol: str, db: Session) -> dict:
+    """Получить статистику пары из БД."""
+    # Открытые позиции по символу
+    open_position = db.query(PositionModel).filter(
+        PositionModel.symbol == symbol,
+        PositionModel.status == "open"
+    ).first()
+    
+    # Сигналы за 24 часа
+    yesterday = datetime.utcnow() - timedelta(hours=24)
+    signals_24h = db.query(SignalModel).filter(
+        SignalModel.symbol == symbol,
+        SignalModel.created_at >= yesterday
+    ).count()
+    
+    # Сделки за 24 часа
+    trades_24h = db.query(TradeModel).filter(
+        TradeModel.symbol == symbol,
+        TradeModel.created_at >= yesterday
+    ).count()
+    
+    # Статистика за 30 дней
+    month_ago = datetime.utcnow() - timedelta(days=30)
+    trades_30d = db.query(TradeModel).filter(
+        TradeModel.symbol == symbol,
+        TradeModel.created_at >= month_ago
+    ).all()
+    
+    total_pnl_30d = sum(t.pnl_usd for t in trades_30d) if trades_30d else 0
+    win_rate_30d = 0.0
+    if trades_30d:
+        winners = len([t for t in trades_30d if t.pnl_usd > 0])
+        win_rate_30d = (winners / len(trades_30d)) * 100
+    
+    avg_duration = None
+    if trades_30d:
+        durations = [t.duration_minutes for t in trades_30d if t.duration_minutes]
+        avg_duration = sum(durations) / len(durations) if durations else None
+    
+    return {
+        "has_position": open_position is not None,
+        "position_side": SideEnum(open_position.side) if open_position else None,
+        "signals_24h": signals_24h,
+        "trades_24h": trades_24h,
+        "total_pnl_30d": total_pnl_30d,
+        "win_rate_30d": win_rate_30d,
+        "avg_duration": int(avg_duration) if avg_duration else 0,
+    }
+
+
+@router.get("")
+async def get_pairs(db: Session = Depends(get_db)) -> ApiResponse:
+    """Get all trading pairs."""
     
     pairs = []
-    active_positions = {"BTCUSDT": Side.LONG, "ETHUSDT": Side.LONG, "SOLUSDT": Side.SHORT}
     
     for config in PAIRS_CONFIG:
         symbol = config["symbol"]
+        base_price = config["base_price"]
         
-        # Generate realistic price
-        base_prices = {
-            "BTCUSDT": 96500, "ETHUSDT": 3450, "BNBUSDT": 710,
-            "SOLUSDT": 98, "XRPUSDT": 2.35, "ADAUSDT": 0.95,
-            "AVAXUSDT": 42, "DOGEUSDT": 0.32, "DOTUSDT": 7.5,
-            "MATICUSDT": 0.98, "LINKUSDT": 23, "UNIUSDT": 14,
-            "ATOMUSDT": 9.5, "LTCUSDT": 105, "ETCUSDT": 28,
-            "NEARUSDT": 5.2, "APTUSDT": 9.8, "ARBUSDT": 0.85,
-            "OPUSDT": 1.95, "INJUSDT": 24,
-        }
+        # Получаем статистику из БД
+        stats = get_pair_stats_from_db(symbol, db)
         
-        current_price = base_prices.get(symbol, 100) * random.uniform(0.98, 1.02)
-        change_24h = random.uniform(-5, 8)
+        # Последний сигнал
+        last_signal = db.query(SignalModel).filter(
+            SignalModel.symbol == symbol
+        ).order_by(SignalModel.created_at.desc()).first()
         
         pairs.append(Pair(
             symbol=symbol,
             name=config["name"],
             sector=config["sector"],
-            current_price=round(current_price, 4),
-            price_change_24h=round(current_price * change_24h / 100, 4),
-            price_change_percent_24h=round(change_24h, 2),
-            volume_24h=random.uniform(100_000_000, 5_000_000_000),
-            high_24h=round(current_price * 1.03, 4),
-            low_24h=round(current_price * 0.97, 4),
-            volatility_regime=random.choice([VolatilityRegime.LOW, VolatilityRegime.NORMAL, VolatilityRegime.HIGH]),
-            atr_ratio=random.uniform(0.5, 1.5),
-            has_active_position=symbol in active_positions,
-            active_position_side=active_positions.get(symbol),
-            last_signal_time=datetime.utcnow().isoformat() if random.random() > 0.5 else None,
+            current_price=base_price,  # TODO: Заменить на реальную цену с Binance
+            price_change_24h=0.0,  # TODO: Заменить на реальные данные
+            price_change_percent_24h=0.0,  # TODO: Заменить на реальные данные
+            volume_24h=0.0,  # TODO: Заменить на реальные данные
+            high_24h=base_price * 1.02,  # TODO: Заменить на реальные данные
+            low_24h=base_price * 0.98,  # TODO: Заменить на реальные данные
+            volatility_regime=VolatilityRegimeEnum.NORMAL,
+            atr_ratio=1.0,
+            has_active_position=stats["has_position"],
+            active_position_side=stats["position_side"],
+            last_signal_time=last_signal.created_at.isoformat() if last_signal else None,
         ))
     
-    return pairs
-
-
-_pairs = generate_pairs()
-
-
-@router.get("")
-async def get_pairs() -> ApiResponse:
-    """Get all trading pairs."""
-    return ApiResponse(data=[p.model_dump() for p in _pairs])
+    return ApiResponse(data=[p.model_dump() for p in pairs])
 
 
 @router.get("/{symbol}")
-async def get_pair(symbol: str = Path(...)) -> ApiResponse:
+async def get_pair(
+    symbol: str = Path(...),
+    db: Session = Depends(get_db)
+) -> ApiResponse:
     """Get pair details."""
     
-    pair = next((p for p in _pairs if p.symbol == symbol.upper()), None)
+    symbol = symbol.upper()
+    config = next((p for p in PAIRS_CONFIG if p["symbol"] == symbol), None)
     
-    if not pair:
-        raise HTTPException(status_code=404, detail="Pair not found")
+    if not config:
+        raise HTTPException(status_code=404, detail="Пара не найдена")
     
-    # Extended details
+    # Получаем статистику из БД
+    stats = get_pair_stats_from_db(symbol, db)
+    
+    # Последний сигнал
+    last_signal = db.query(SignalModel).filter(
+        SignalModel.symbol == symbol
+    ).order_by(SignalModel.created_at.desc()).first()
+    
+    base_price = config["base_price"]
+    
     detail = PairDetail(
-        **pair.model_dump(),
-        signals_count_24h=random.randint(0, 10),
-        trades_count_24h=random.randint(0, 5),
-        win_rate_30d=random.uniform(60, 85),
-        total_pnl_30d=random.uniform(-500, 2000),
-        avg_trade_duration=random.randint(60, 360),
-        correlation_group=get_correlation_group(symbol.upper()),
-        active_timeframes=[Timeframe.M30, Timeframe.H1, Timeframe.H2],
+        symbol=symbol,
+        name=config["name"],
+        sector=config["sector"],
+        current_price=base_price,  # TODO: Binance API
+        price_change_24h=0.0,
+        price_change_percent_24h=0.0,
+        volume_24h=0.0,
+        high_24h=base_price * 1.02,
+        low_24h=base_price * 0.98,
+        volatility_regime=VolatilityRegimeEnum.NORMAL,
+        atr_ratio=1.0,
+        has_active_position=stats["has_position"],
+        active_position_side=stats["position_side"],
+        last_signal_time=last_signal.created_at.isoformat() if last_signal else None,
+        signals_count_24h=stats["signals_24h"],
+        trades_count_24h=stats["trades_24h"],
+        win_rate_30d=stats["win_rate_30d"],
+        total_pnl_30d=stats["total_pnl_30d"],
+        avg_trade_duration=stats["avg_duration"],
+        correlation_group=get_correlation_group(symbol),
+        active_timeframes=[TimeframeEnum.M30, TimeframeEnum.H1, TimeframeEnum.H2],
         preset_ids=[
-            f"{symbol.upper()}_30m_normal",
-            f"{symbol.upper()}_1h_normal",
-            f"{symbol.upper()}_2h_normal",
+            f"{symbol}_30m_normal",
+            f"{symbol}_1h_normal",
+            f"{symbol}_2h_normal",
         ],
     )
     
@@ -149,87 +216,75 @@ async def get_pair_chart(
     symbol: str = Path(...),
     timeframe: Literal["30m", "1h", "2h", "4h", "1d"] = Query(default="1h"),
     limit: int = Query(default=100, ge=10, le=500),
+    db: Session = Depends(get_db)
 ) -> ApiResponse:
-    """Get OHLCV data for pair."""
+    """Get OHLCV data for pair.
     
-    pair = next((p for p in _pairs if p.symbol == symbol.upper()), None)
-    if not pair:
-        raise HTTPException(status_code=404, detail="Pair not found")
+    TODO: Интегрировать с Binance REST API для реальных данных.
+    """
     
-    # Generate OHLCV data
-    tf_minutes = {"30m": 30, "1h": 60, "2h": 120, "4h": 240, "1d": 1440}
-    delta = timedelta(minutes=tf_minutes[timeframe])
+    symbol = symbol.upper()
+    config = next((p for p in PAIRS_CONFIG if p["symbol"] == symbol), None)
     
+    if not config:
+        raise HTTPException(status_code=404, detail="Пара не найдена")
+    
+    # TODO: Заменить на реальные данные с Binance
+    # from backend.data.binance_rest import BinanceRestClient
+    # client = BinanceRestClient()
+    # candles = await client.get_klines(symbol, timeframe, limit)
+    
+    # Временная заглушка - пустой массив
+    # Фронтенд покажет "Нет данных"
     candles = []
-    now = datetime.utcnow()
-    price = pair.current_price
     
-    for i in range(limit):
-        timestamp = now - (limit - i - 1) * delta
-        
-        # Random OHLCV
-        open_price = price * random.uniform(0.995, 1.005)
-        close_price = open_price * random.uniform(0.99, 1.01)
-        high_price = max(open_price, close_price) * random.uniform(1.0, 1.015)
-        low_price = min(open_price, close_price) * random.uniform(0.985, 1.0)
-        volume = random.uniform(1000, 100000)
-        
-        candles.append(OHLCV(
-            timestamp=timestamp.isoformat(),
-            open=round(open_price, 4),
-            high=round(high_price, 4),
-            low=round(low_price, 4),
-            close=round(close_price, 4),
-            volume=round(volume, 2),
-        ))
-        
-        price = close_price
-    
-    return ApiResponse(data=[c.model_dump() for c in candles])
+    return ApiResponse(data=candles)
 
 
 @router.get("/{symbol}/signals")
 async def get_pair_signals(
     symbol: str = Path(...),
     limit: int = Query(default=10, ge=1, le=50),
+    db: Session = Depends(get_db)
 ) -> ApiResponse:
     """Get recent signals for pair."""
     
-    pair = next((p for p in _pairs if p.symbol == symbol.upper()), None)
-    if not pair:
-        raise HTTPException(status_code=404, detail="Pair not found")
+    symbol = symbol.upper()
+    config = next((p for p in PAIRS_CONFIG if p["symbol"] == symbol), None)
     
-    # Generate sample signals
+    if not config:
+        raise HTTPException(status_code=404, detail="Пара не найдена")
+    
+    # Получаем реальные сигналы из БД
+    signals_db = db.query(SignalModel).filter(
+        SignalModel.symbol == symbol
+    ).order_by(SignalModel.created_at.desc()).limit(limit).all()
+    
     signals = []
-    now = datetime.utcnow()
-    
-    for i in range(min(limit, 5)):
-        side = random.choice([Side.LONG, Side.SHORT])
-        entry = pair.current_price * random.uniform(0.95, 1.05)
-        
+    for sig in signals_db:
         signals.append(Signal(
-            id=1000 + i,
-            symbol=symbol.upper(),
-            side=side,
-            timeframe=random.choice([Timeframe.M30, Timeframe.H1, Timeframe.H2]),
-            entry_price=round(entry, 4),
-            current_price=pair.current_price,
-            sl_price=round(entry * (0.915 if side == Side.LONG else 1.085), 4),
-            tp1_price=round(entry * (1.01 if side == Side.LONG else 0.99), 4),
-            tp2_price=round(entry * (1.02 if side == Side.LONG else 0.98), 4),
-            tp3_price=round(entry * (1.03 if side == Side.LONG else 0.97), 4),
-            tp4_price=round(entry * (1.04 if side == Side.LONG else 0.96), 4),
-            tp5_price=round(entry * (1.075 if side == Side.LONG else 0.925), 4),
-            tp6_price=round(entry * (1.14 if side == Side.LONG else 0.86), 4),
-            status=random.choice([SignalStatus.FILLED, SignalStatus.ACTIVE, SignalStatus.CANCELLED]),
-            preset_id=f"{symbol.upper()}_1h_normal",
-            volatility_regime=VolatilityRegime.NORMAL,
-            confidence=random.uniform(65, 90),
-            filters_passed=["volume", "rsi", "adx"],
+            id=sig.id,
+            symbol=sig.symbol,
+            side=SideEnum(sig.side),
+            timeframe=TimeframeEnum(sig.timeframe),
+            entry_price=sig.entry_price,
+            current_price=None,  # TODO: текущая цена
+            sl_price=sig.sl_price,
+            tp1_price=sig.tp1_price,
+            tp2_price=sig.tp2_price,
+            tp3_price=sig.tp3_price,
+            tp4_price=sig.tp4_price,
+            tp5_price=sig.tp5_price,
+            tp6_price=sig.tp6_price,
+            status=SignalStatusEnum(sig.status),
+            preset_id=sig.preset_id,
+            volatility_regime=VolatilityRegimeEnum(sig.volatility_regime) if sig.volatility_regime else VolatilityRegimeEnum.NORMAL,
+            confidence=sig.confidence,
+            filters_passed=[],  # TODO
             filters_failed=[],
-            telegram_sent=True,
-            cornix_sent=True,
-            created_at=(now - timedelta(hours=i * 12)).isoformat(),
+            telegram_sent=sig.telegram_sent,
+            cornix_sent=sig.telegram_sent,  # Cornix через Telegram
+            created_at=sig.created_at.isoformat() if sig.created_at else None,
         ))
     
     return ApiResponse(data=[s.model_dump() for s in signals])
