@@ -1,63 +1,28 @@
-# VELAS-06: Portfolio & Live Engine
+VELAS-07: Telegram Bot & Cornix Integration
 
-## Commit Message
-```
-feat(velas-06): add portfolio management and live trading engine
+Добавлен модуль Telegram для отправки сигналов в формате Cornix.
 
-- Add portfolio module with correlation, risk, and position management
-- Add live engine with signal manager, position tracker, and state persistence
-- Implement sector diversification (8 sectors, max 2 per sector)
-- Implement portfolio heat tracking (max 8%)
-- Add position sizing (Fixed %, Volatility Adjusted, Kelly)
-- Add SQLite-based state management for crash recovery
-- Add comprehensive tests for portfolio and live modules
-```
+Новые файлы:
+- backend/telegram/__init__.py — экспорт модуля
+- backend/telegram/bot.py — async Telegram bot с retry и rate limiting
+- backend/telegram/cornix.py — форматтер сигналов Cornix
+- backend/telegram/notifications.py — менеджер уведомлений
+- tests/test_telegram.py — 40+ тестов
+- run_tests.bat / run_tests.sh — тест раннеры
 
-## Files Changed
+Функциональность:
+- CornixFormatter: форматирование сигналов для Cornix бота
+- TradingSignal: dataclass с валидацией LONG/SHORT
+- TelegramBot: async отправка с retry и rate limiting
+- TelegramBotMock: мок для тестирования
+- NotificationManager: управление всеми уведомлениями
+- NotificationSettings: фильтрация типов уведомлений
+- Daily stats tracking: статистика за день
 
-### New Files (Portfolio)
-- backend/portfolio/__init__.py
-- backend/portfolio/correlation.py (CorrelationCalculator, SectorFilter)
-- backend/portfolio/risk.py (PositionSizer, PortfolioHeatTracker)
-- backend/portfolio/manager.py (PortfolioManager, Position)
+Формат сигнала Cornix:
+- Leverage: Cross (10X) фиксированный
+- Entry: одна цена (не зона)
+- Без Exchange
+- Без Trailing Configuration
 
-### New Files (Live)
-- backend/live/__init__.py
-- backend/live/engine.py (LiveEngine, EngineConfig)
-- backend/live/signal_manager.py (SignalManager, EnrichedSignal)
-- backend/live/position_tracker.py (PositionTracker, TrackingEvent)
-- backend/live/state.py (StateManager, SQLite persistence)
-
-### New Files (Tests)
-- tests/conftest.py
-- tests/test_portfolio.py
-- tests/test_live.py
-
-### Updated Files
-- CHECKLIST.md (updated progress to 50%, 6/12 phases)
-
-## Key Features
-
-### Portfolio Management
-- Max 5 simultaneous positions
-- 8 sectors: BTC, ETH, L1, L2, DEFI, OLD, MEME, CEX
-- Correlation filter (threshold 0.7)
-- Portfolio heat tracking (max 8% total risk)
-- Position sizing with volatility adjustment
-
-### Live Engine
-- WebSocket integration for real-time data
-- Signal generation on closed candles
-- Automatic TP/SL tracking with cascade stops
-- State persistence in SQLite database
-- Crash recovery with position restoration
-
-### Risk Management
-- Fixed percent risk per trade (default 2%)
-- Kelly criterion support
-- Volatility-adjusted position sizing
-- Sector diversification limits
-
-## Next Steps
-- VELAS-07: Telegram integration (Cornix format)
-- VELAS-08: Frontend base (React + TypeScript)
+Тесты: pytest tests/test_telegram.py

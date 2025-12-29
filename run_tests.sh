@@ -1,68 +1,54 @@
 #!/bin/bash
+
+# Change to script directory
 cd "$(dirname "$0")"
 
-echo "============================================"
-echo "VELAS v2 - Test Runner (Unix)"
-echo "============================================"
-echo
+echo ""
+echo "╔═══════════════════════════════════════════╗"
+echo "║    VELAS-07 Telegram Module Tests         ║"
+echo "╚═══════════════════════════════════════════╝"
+echo ""
 
-# Проверяем Python
+# Check Python
 if ! command -v python3 &> /dev/null; then
-    echo "[ERROR] Python3 not found. Please install Python 3.11+"
+    echo "[ERROR] Python3 not found!"
+    echo "Please install Python 3.11+"
     exit 1
 fi
 
-# Версия Python
-PYVER=$(python3 --version 2>&1 | cut -d' ' -f2)
-echo "[INFO] Python version: $PYVER"
-
-# Создаём/активируем venv
+# Create venv if not exists
 if [ ! -d "venv" ]; then
     echo "[INFO] Creating virtual environment..."
     python3 -m venv venv
-    if [ $? -ne 0 ]; then
-        echo "[ERROR] Failed to create venv"
-        exit 1
-    fi
 fi
 
-echo "[INFO] Activating virtual environment..."
+# Activate venv
 source venv/bin/activate
 
-# Обновляем pip
-echo "[INFO] Upgrading pip..."
-python -m pip install --upgrade pip -q
-
-# Устанавливаем зависимости
+# Install dependencies
 echo "[INFO] Installing dependencies..."
-pip install -q pytest pytest-asyncio pandas numpy
+pip install --quiet --upgrade pip
+pip install --quiet pytest pytest-asyncio python-telegram-bot>=20.7
 
-# Проверяем наличие backend/requirements.txt
-if [ -f "backend/requirements.txt" ]; then
-    pip install -q -r backend/requirements.txt
-fi
+# Run tests
+echo ""
+echo "[INFO] Running tests..."
+echo "─────────────────────────────────────────────"
+echo ""
 
-echo
-echo "============================================"
-echo "Running Tests"
-echo "============================================"
-echo
+python -m pytest tests/test_telegram.py -v --tb=short
 
-# Запускаем тесты
-python -m pytest tests/ -v --tb=short
+# Capture exit code
+EXITCODE=$?
 
-TEST_RESULT=$?
+echo ""
+echo "─────────────────────────────────────────────"
 
-echo
-echo "============================================"
-if [ $TEST_RESULT -eq 0 ]; then
+if [ $EXITCODE -eq 0 ]; then
     echo "[SUCCESS] All tests passed!"
 else
-    echo "[FAILED] Some tests failed. Exit code: $TEST_RESULT"
+    echo "[FAILED] Some tests failed!"
 fi
-echo "============================================"
 
-# Деактивируем venv
-deactivate
-
-exit $TEST_RESULT
+echo ""
+exit $EXITCODE
