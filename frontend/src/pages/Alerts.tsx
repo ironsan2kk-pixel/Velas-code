@@ -30,9 +30,11 @@ const Alerts: React.FC = () => {
   const [page, setPage] = useState(1);
   const [hasChanges, setHasChanges] = useState(false);
 
-  const { data: alertSettings, isLoading: settingsLoading } = useAlertSettings();
+  const { data: alertSettingsResp, isLoading: settingsLoading } = useAlertSettings();
+  const alertSettings = alertSettingsResp?.data;
   const updateAlertSettings = useUpdateAlertSettings();
-  const { data: alertHistory, isLoading: historyLoading } = useAlertHistory(page, 20);
+  const { data: alertHistoryResp, isLoading: historyLoading } = useAlertHistory(page, 20);
+  const alertHistory = alertHistoryResp?.data || [];
 
   // WebSocket for real-time alerts
   useWebSocket({
@@ -476,3 +478,4 @@ const Alerts: React.FC = () => {
 };
 
 export default Alerts;
+

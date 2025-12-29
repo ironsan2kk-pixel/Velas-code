@@ -1,3 +1,28 @@
 """VELAS API Routes."""
-from . import dashboard, positions, signals, history, system
-__all__ = ["dashboard", "positions", "signals", "history", "system"]
+from . import (
+    dashboard,
+    positions,
+    signals,
+    history,
+    pairs,
+    analytics,
+    backtest,
+    settings,
+    alerts,
+    system,
+    websocket,
+)
+
+__all__ = [
+    "dashboard",
+    "positions", 
+    "signals",
+    "history",
+    "pairs",
+    "analytics",
+    "backtest",
+    "settings",
+    "alerts",
+    "system",
+    "websocket",
+]

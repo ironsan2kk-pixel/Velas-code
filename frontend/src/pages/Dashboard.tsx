@@ -176,14 +176,17 @@ const SignalMini: React.FC<SignalMiniProps> = ({ signal }) => {
 const Dashboard: React.FC = () => {
   const [chartPeriod, setChartPeriod] = useState<ChartPeriod>('1w');
   
-  const { data: summary, isLoading: summaryLoading } = useDashboardSummary();
-  const { data: metrics, isLoading: metricsLoading } = useDashboardMetrics();
-  const { data: chartData, isLoading: chartLoading } = useDashboardChart(chartPeriod);
-  const { data: positions, isLoading: positionsLoading } = usePositions('open');
-  const { data: signalsData, isLoading: signalsLoading } = useSignals(1, 10);
+  const { data: summaryResp, isLoading: summaryLoading } = useDashboardSummary();
+  const { data: metricsResp, isLoading: metricsLoading } = useDashboardMetrics();
+  const { data: chartResp, isLoading: chartLoading } = useDashboardChart(chartPeriod);
+  const { data: positionsResp, isLoading: positionsLoading } = usePositions('open');
+  const { data: signalsResp, isLoading: signalsLoading } = useSignals(1, 10);
 
-  const signals = signalsData?.data || [];
-  const openPositions = positions || [];
+  const summary = summaryResp?.data;
+  const metrics = metricsResp?.data;
+  const chartData = chartResp?.data || [];
+  const signals = signalsResp?.data?.data || [];
+  const openPositions = positionsResp?.data || [];
 
   if (summaryLoading) {
     return (
@@ -478,3 +481,4 @@ const Dashboard: React.FC = () => {
 };
 
 export default Dashboard;
+

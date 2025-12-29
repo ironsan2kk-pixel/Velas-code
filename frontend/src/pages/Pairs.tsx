@@ -22,7 +22,8 @@ type SortDirection = 'asc' | 'desc';
 
 const Pairs: React.FC = () => {
   const navigate = useNavigate();
-  const { data: pairs, isLoading } = usePairs();
+  const { data: pairsResp, isLoading } = usePairs();
+  const pairs = pairsResp?.data || [];
   
   const [searchQuery, setSearchQuery] = useState('');
   const [sectorFilter, setSectorFilter] = useState<string>('all');
@@ -285,3 +286,4 @@ const Pairs: React.FC = () => {
 };
 
 export default Pairs;
+

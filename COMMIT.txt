@@ -1,45 +1,79 @@
-fix: добавлены ВСЕ недостающие модели в models.py
+fix: Комплексное исправление Frontend + Backend интеграции
 
-## Исправлено
+## Проблема
+API возвращает данные в формате `{success: true, data: [...], timestamp: ...}`
+Но Frontend ожидал данные напрямую как массив/объект.
 
-### 1. ImportError в routes (models.py)
-Добавлены ВСЕ недостающие модели:
-- Pair, PairDetail, OHLCV, Signal
-- BacktestConfig, BacktestResult
-- AllSettings, TradingSettings, TelegramSettings, NotificationSettings
-- Preset
-- MonthlyStats, PairStats, CorrelationMatrix, EquityPoint
-- Алиасы: Side, Timeframe, VolatilityRegime, SignalStatus
+Результат: `openPositions.slice is not a function` и белый экран.
 
-### 2. ImportError telegram/bot.py (конфликт имён)
-- Создана `backend/tg_notifier/` с исправленным bot.py
-- Старая `backend/telegram/` теперь редирект
+## Исправления
 
-### 3. Fake data → Real data
-- pairs.py и analytics.py работают с реальной БД
-- Убраны все random.* вызовы
+### Frontend - Все страницы (10 файлов)
+Исправлено извлечение данных из API response:
 
-## Файлы
+1. Dashboard.tsx - добавлено извлечение .data для summary, metrics, chartData, positions, signals
+2. Positions.tsx - positions?.data || []
+3. Pairs.tsx - pairs?.data || []
+4. Analytics.tsx - все 5 data hooks
+5. Backtest.tsx - results?.data || []
+6. Settings.tsx - settings?.data и presets?.data
+7. Alerts.tsx - alertSettings?.data и alertHistory?.data
+8. System.tsx - systemStatus?.data и logs?.data
 
-```
+### Backend - WebSocket endpoint
+- websocket.py - полноценный WebSocket на /ws
+- Heartbeat каждые 30 сек
+- Каналы: signals, positions, system
+- Подписка/отписка
+
+### Backend - Модели и Routes
+- models.py - все Pydantic модели
+- pairs.py - реальные данные из БД
+- analytics.py - реальные данные из БД
+- settings.py - исправлен синтаксис
+- main.py - подключен websocket router
+
+## Файлы в архиве
+
 backend/
 ├── api/
-│   ├── models.py          ← ЗАМЕНИТЬ (полный набор моделей)
+│   ├── main.py
+│   ├── models.py
 │   └── routes/
-│       ├── pairs.py       ← ЗАМЕНИТЬ
-│       └── analytics.py   ← ЗАМЕНИТЬ
-├── tg_notifier/           ← ДОБАВИТЬ новую папку
+│       ├── __init__.py
+│       ├── analytics.py
+│       ├── pairs.py
+│       ├── settings.py
+│       └── websocket.py
+├── live/
+│   ├── __init__.py
+│   └── engine.py
+├── telegram/
 │   ├── __init__.py
 │   └── bot.py
-├── telegram/              ← ЗАМЕНИТЬ содержимое
-│   ├── __init__.py
-│   └── bot.py
-└── live/
-    ├── __init__.py        ← ЗАМЕНИТЬ
-    └── engine.py          ← ЗАМЕНИТЬ
-```
+└── tg_notifier/
+    ├── __init__.py
+    └── bot.py
+
+frontend/src/
+├── components/
+│   ├── layout/index.ts
+│   └── ui/index.ts
+└── pages/
+    ├── Dashboard.tsx
+    ├── Positions.tsx
+    ├── History.tsx
+    ├── Signals.tsx
+    ├── Pairs.tsx
+    ├── Analytics.tsx
+    ├── Backtest.tsx
+    ├── Settings.tsx
+    ├── Alerts.tsx
+    └── System.tsx
 
 ## Инструкция
 
 1. Распаковать ZIP в C:\velas\code\Velas-code\ с заменой
-2. Запустить START.bat
+2. Перезапустить API: START_API.bat
+3. Перезапустить Frontend: START_FRONTEND.bat
+4. Открыть http://localhost:5173

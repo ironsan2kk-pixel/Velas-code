@@ -36,11 +36,18 @@ const Analytics: React.FC = () => {
   const [equityPeriod, setEquityPeriod] = useState<PeriodOption>('3m');
   const [drawdownPeriod, setDrawdownPeriod] = useState<PeriodOption>('3m');
 
-  const { data: equityData, isLoading: equityLoading } = useAnalyticsEquity(equityPeriod);
-  const { data: drawdownData, isLoading: drawdownLoading } = useAnalyticsDrawdown(drawdownPeriod);
-  const { data: monthlyData, isLoading: monthlyLoading } = useAnalyticsMonthly();
-  const { data: pairsData, isLoading: pairsLoading } = useAnalyticsPairs();
-  const { data: correlationData, isLoading: correlationLoading } = useAnalyticsCorrelation();
+  const { data: equityResp, isLoading: equityLoading } = useAnalyticsEquity(equityPeriod);
+  const { data: drawdownResp, isLoading: drawdownLoading } = useAnalyticsDrawdown(drawdownPeriod);
+  const { data: monthlyResp, isLoading: monthlyLoading } = useAnalyticsMonthly();
+  const { data: pairsResp, isLoading: pairsLoading } = useAnalyticsPairs();
+  const { data: correlationResp, isLoading: correlationLoading } = useAnalyticsCorrelation();
+
+  // Извлекаем данные из API response
+  const equityData = equityResp?.data || [];
+  const drawdownData = drawdownResp?.data || [];
+  const monthlyData = monthlyResp?.data || [];
+  const pairsData = pairsResp?.data || [];
+  const correlationData = correlationResp?.data;
 
   // Сортированные пары по P&L
   const sortedPairs = pairsData ? [...pairsData].sort((a, b) => b.pnl_percent - a.pnl_percent) : [];
@@ -319,3 +326,4 @@ const Analytics: React.FC = () => {
 };
 
 export default Analytics;
+

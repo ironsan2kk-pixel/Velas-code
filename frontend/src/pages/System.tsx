@@ -28,11 +28,13 @@ const System: React.FC = () => {
   const [logLevel, setLogLevel] = useState<LogLevel>('all');
   const [logLimit, setLogLimit] = useState(100);
 
-  const { data: systemStatus, isLoading: statusLoading } = useSystemStatus();
-  const { data: logs, isLoading: logsLoading } = useSystemLogs(
+  const { data: systemStatusResp, isLoading: statusLoading } = useSystemStatus();
+  const systemStatus = systemStatusResp?.data;
+  const { data: logsResp, isLoading: logsLoading } = useSystemLogs(
     logLimit,
     logLevel === 'all' ? undefined : logLevel
   );
+  const logs = logsResp?.data || [];
   const downloadLogs = useDownloadLogs();
   const restartComponent = useRestartComponent();
 
@@ -363,3 +365,5 @@ const System: React.FC = () => {
 };
 
 export default System;
+
+

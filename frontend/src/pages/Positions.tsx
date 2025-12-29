@@ -234,7 +234,8 @@ const Positions: React.FC = () => {
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
   const [showFilters, setShowFilters] = useState(false);
 
-  const { data: positions, isLoading, refetch, isRefetching } = usePositions('open');
+  const { data: positionsResp, isLoading, refetch, isRefetching } = usePositions('open');
+  const positions = positionsResp?.data || [];
   const closePosition = useClosePosition();
 
   const handleSort = (field: SortField) => {
@@ -433,3 +434,4 @@ const Positions: React.FC = () => {
 };
 
 export default Positions;
+

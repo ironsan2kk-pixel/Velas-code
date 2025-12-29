@@ -37,7 +37,8 @@ const statusLabels = {
 };
 
 const Backtest: React.FC = () => {
-  const { data: results, isLoading: resultsLoading } = useBacktestResults();
+  const { data: resultsResp, isLoading: resultsLoading } = useBacktestResults();
+  const results = resultsResp?.data || [];
   const runBacktest = useRunBacktest();
   
   const [selectedResultId, setSelectedResultId] = useState<string | null>(null);
@@ -406,3 +407,4 @@ const Backtest: React.FC = () => {
 };
 
 export default Backtest;
+

@@ -15,9 +15,11 @@ const Settings: React.FC = () => {
   const [activeTab, setActiveTab] = useState<SettingsTab>('trading');
   const [hasChanges, setHasChanges] = useState(false);
   
-  const { data: settings, isLoading } = useSettings();
+  const { data: settingsResp, isLoading } = useSettings();
+  const settings = settingsResp?.data;
   const updateSettings = useUpdateSettings();
-  const { data: presets, isLoading: presetsLoading } = usePresets();
+  const { data: presetsResp, isLoading: presetsLoading } = usePresets();
+  const presets = presetsResp?.data || [];
   const updatePreset = useUpdatePreset();
 
   const [formData, setFormData] = useState<SystemSettings | null>(null);
@@ -510,3 +512,4 @@ const Settings: React.FC = () => {
 };
 
 export default Settings;
+

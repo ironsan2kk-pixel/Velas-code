@@ -23,6 +23,7 @@ from .routes import (
     settings,
     alerts,
     system,
+    websocket,
 )
 from backend.db.database import init_db
 
@@ -84,6 +85,9 @@ app.include_router(backtest.router, prefix="/api/backtest", tags=["Backtest"])
 app.include_router(settings.router, prefix="/api/settings", tags=["Settings"])
 app.include_router(alerts.router, prefix="/api/alerts", tags=["Alerts"])
 app.include_router(system.router, prefix="/api/system", tags=["System"])
+
+# WebSocket - подключаем без prefix чтобы был доступен на /ws
+app.include_router(websocket.router, tags=["WebSocket"])
 
 
 @app.exception_handler(Exception)
