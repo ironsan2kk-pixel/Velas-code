@@ -1,47 +1,45 @@
-fix: критические исправления импортов и моделей
+fix: добавлены ВСЕ недостающие модели в models.py
 
 ## Исправлено
 
-### 1. ImportError в pairs.py
-- Добавлены недостающие модели в `backend/api/models.py`:
-  - Pair, PairDetail, OHLCV
-  - Signal (расширенная версия)
-  - MonthlyStats, PairStats, CorrelationMatrix
-  - EquityPoint (исправлен timestamp на str)
-- Добавлены алиасы Side, Timeframe, VolatilityRegime, SignalStatus
+### 1. ImportError в routes (models.py)
+Добавлены ВСЕ недостающие модели:
+- Pair, PairDetail, OHLCV, Signal
+- BacktestConfig, BacktestResult
+- AllSettings, TradingSettings, TelegramSettings, NotificationSettings
+- Preset
+- MonthlyStats, PairStats, CorrelationMatrix, EquityPoint
+- Алиасы: Side, Timeframe, VolatilityRegime, SignalStatus
 
-### 2. ImportError в telegram/bot.py (конфликт имён)
-- Создана новая папка `backend/tg_notifier/` с исправленным bot.py
-- Старая `backend/telegram/` теперь содержит редирект на новый модуль
-- Исправлен импорт в `backend/live/engine.py`
+### 2. ImportError telegram/bot.py (конфликт имён)
+- Создана `backend/tg_notifier/` с исправленным bot.py
+- Старая `backend/telegram/` теперь редирект
 
 ### 3. Fake data → Real data
-- `backend/api/routes/pairs.py` - переписан для работы с БД
-- `backend/api/routes/analytics.py` - переписан для работы с БД
-- Убраны все `random.*` вызовы
-- Данные теперь из TradeModel, PositionModel, SignalModel
+- pairs.py и analytics.py работают с реальной БД
+- Убраны все random.* вызовы
 
-## Файлы для замены
+## Файлы
 
 ```
 backend/
 ├── api/
-│   ├── models.py          ← ЗАМЕНИТЬ (добавлены модели)
+│   ├── models.py          ← ЗАМЕНИТЬ (полный набор моделей)
 │   └── routes/
-│       ├── pairs.py       ← ЗАМЕНИТЬ (реальные данные)
-│       └── analytics.py   ← ЗАМЕНИТЬ (реальные данные)
-├── tg_notifier/           ← ДОБАВИТЬ (новая папка)
+│       ├── pairs.py       ← ЗАМЕНИТЬ
+│       └── analytics.py   ← ЗАМЕНИТЬ
+├── tg_notifier/           ← ДОБАВИТЬ новую папку
 │   ├── __init__.py
 │   └── bot.py
 ├── telegram/              ← ЗАМЕНИТЬ содержимое
-│   ├── __init__.py        ← Редирект
-│   └── bot.py             ← Редирект
+│   ├── __init__.py
+│   └── bot.py
 └── live/
-    └── engine.py          ← ЗАМЕНИТЬ (исправлен импорт)
+    ├── __init__.py        ← ЗАМЕНИТЬ
+    └── engine.py          ← ЗАМЕНИТЬ
 ```
 
 ## Инструкция
 
 1. Распаковать ZIP в C:\velas\code\Velas-code\ с заменой
-2. Проверить: `python -c "from backend.api.models import Pair; print('OK')"`
-3. Запустить: START.bat
+2. Запустить START.bat

@@ -1,5 +1,7 @@
 """
 VELAS API Models - Pydantic схемы.
+
+Все модели для API endpoints.
 """
 
 from datetime import datetime
@@ -7,6 +9,10 @@ from typing import List, Optional, Generic, TypeVar
 from pydantic import BaseModel, Field
 from enum import Enum
 
+
+# =============================================================================
+# ENUMS
+# =============================================================================
 
 class SideEnum(str, Enum):
     LONG = "LONG"
@@ -46,12 +52,16 @@ class SystemStatusEnum(str, Enum):
     MAINTENANCE = "maintenance"
 
 
-# Алиасы для совместимости
+# Алиасы для совместимости с routes
 Side = SideEnum
 Timeframe = TimeframeEnum
 VolatilityRegime = VolatilityRegimeEnum
 SignalStatus = SignalStatusEnum
 
+
+# =============================================================================
+# GENERIC RESPONSES
+# =============================================================================
 
 T = TypeVar("T")
 
@@ -157,7 +167,6 @@ class SignalResponse(BaseModel):
         from_attributes = True
 
 
-# Алиас Signal для pairs.py
 class Signal(BaseModel):
     """Signal model для pairs.py"""
     id: int
@@ -333,6 +342,104 @@ class CorrelationMatrix(BaseModel):
     """Матрица корреляций."""
     symbols: List[str]
     matrix: List[List[float]]
+
+
+# =============================================================================
+# BACKTEST MODELS
+# =============================================================================
+
+class BacktestConfig(BaseModel):
+    """Конфигурация бэктеста."""
+    symbols: List[str] = Field(default_factory=list)
+    timeframes: List[TimeframeEnum] = Field(default_factory=list)
+    start_date: str
+    end_date: str
+    initial_capital: float = 10000.0
+    position_size_percent: float = 2.0
+    use_filters: bool = True
+    walk_forward: bool = False
+
+
+class BacktestResult(BaseModel):
+    """Результат бэктеста."""
+    id: str
+    config: BacktestConfig
+    status: str = "pending"  # pending, running, completed, failed
+    progress: int = 0
+    total_trades: int = 0
+    win_rate: float = 0.0
+    total_pnl: float = 0.0
+    profit_factor: float = 0.0
+    sharpe_ratio: float = 0.0
+    max_drawdown: float = 0.0
+    equity_curve: List[EquityPoint] = Field(default_factory=list)
+    error_message: Optional[str] = None
+    created_at: Optional[str] = None
+    completed_at: Optional[str] = None
+
+
+# =============================================================================
+# SETTINGS MODELS
+# =============================================================================
+
+class TelegramSettings(BaseModel):
+    """Настройки Telegram."""
+    enabled: bool = True
+    send_signals: bool = True
+    send_tp_hits: bool = True
+    send_sl_hits: bool = True
+    send_daily_summary: bool = True
+    quiet_hours_start: Optional[int] = None  # 0-23
+    quiet_hours_end: Optional[int] = None
+
+
+class NotificationSettings(BaseModel):
+    """Настройки уведомлений."""
+    telegram: TelegramSettings = Field(default_factory=TelegramSettings)
+    sound_enabled: bool = True
+    push_enabled: bool = True
+
+
+class TradingSettings(BaseModel):
+    """Настройки торговли."""
+    enabled: bool = True
+    max_positions: int = 5
+    position_size_percent: float = 2.0
+    max_portfolio_heat: float = 15.0
+    use_correlation_filter: bool = True
+    max_correlated_positions: int = 2
+
+
+class AllSettings(BaseModel):
+    """Все настройки системы."""
+    trading: TradingSettings = Field(default_factory=TradingSettings)
+    notifications: NotificationSettings = Field(default_factory=NotificationSettings)
+    theme: str = "dark"
+    language: str = "ru"
+
+
+class Preset(BaseModel):
+    """Пресет для пары."""
+    id: str
+    symbol: str
+    timeframe: TimeframeEnum
+    volatility_regime: VolatilityRegimeEnum
+    i1: int = 20
+    i2: int = 40
+    i3: int = 10
+    i4: int = 15
+    i5: int = 12
+    tp1: float = 1.0
+    tp2: float = 2.0
+    tp3: float = 3.0
+    tp4: float = 4.0
+    tp5: float = 7.5
+    tp6: float = 14.0
+    sl: float = 8.5
+    tp_distribution: List[float] = Field(default_factory=lambda: [10.0, 10.0, 10.0, 20.0, 25.0, 25.0])
+    filters: List[str] = Field(default_factory=lambda: ["volume", "rsi", "adx"])
+    enabled: bool = True
+    last_updated: Optional[str] = None
 
 
 # =============================================================================
