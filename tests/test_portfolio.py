@@ -269,7 +269,7 @@ class TestPositionSizer:
     
     def test_risk_calculation(self):
         """Тест корректности расчёта риска."""
-        sizer = PositionSizer(balance=10000, risk_per_trade=2.0)
+        sizer = PositionSizer(balance=10000, risk_per_trade=2.0, max_position_size=50.0)
         
         result = sizer.calculate_position_size(
             entry_price=100,
@@ -574,3 +574,4 @@ class TestPosition:
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
+
