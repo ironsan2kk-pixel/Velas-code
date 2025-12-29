@@ -46,12 +46,21 @@ from .position_tracker import (
     PositionTracker,
 )
 
-# Engine
-from .engine import (
-    EngineStatus,
-    EngineConfig,
-    LiveEngine,
-)
+# Engine (может не импортироваться если нет binance_ws)
+try:
+    from .engine import (
+        EngineStatus,
+        EngineConfig,
+        LiveEngine,
+    )
+    HAS_ENGINE = True
+except ImportError as e:
+    import logging
+    logging.warning(f"LiveEngine not available: {e}")
+    EngineStatus = None
+    EngineConfig = None
+    LiveEngine = None
+    HAS_ENGINE = False
 
 __all__ = [
     # State
@@ -73,4 +82,5 @@ __all__ = [
     "EngineStatus",
     "EngineConfig",
     "LiveEngine",
+    "HAS_ENGINE",
 ]

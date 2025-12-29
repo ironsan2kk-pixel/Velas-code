@@ -23,8 +23,16 @@ import pandas as pd
 import sys
 sys.path.insert(0, str(__file__).rsplit("/", 3)[0])
 
-from backend.data.binance_ws import BinanceWebSocket, KlineCallback
-from backend.data.binance_rest import BinanceREST
+# Conditional imports - WebSocket может отсутствовать
+try:
+    from backend.data.binance_ws import BinanceWebSocket, KlineCallback
+    HAS_WEBSOCKET = True
+except ImportError:
+    HAS_WEBSOCKET = False
+    BinanceWebSocket = None
+    KlineCallback = None
+
+from backend.data.binance_rest import BinanceRestClient
 from backend.data.storage import CandleStorage
 from backend.core.presets import PresetManager
 from backend.core.volatility import VolatilityAnalyzer
@@ -129,7 +137,7 @@ class LiveEngine:
         self.signal_manager: Optional[SignalManager] = None
         self.position_tracker: Optional[PositionTracker] = None
         self.binance_ws: Optional[BinanceWebSocket] = None
-        self.binance_rest: Optional[BinanceREST] = None
+        self.binance_rest: Optional[BinanceRestClient] = None
         self.storage: Optional[CandleStorage] = None
         
         # Буферы данных
@@ -204,7 +212,7 @@ class LiveEngine:
         self.position_tracker.on_event = self._on_position_event
         
         # Binance REST & WebSocket
-        self.binance_rest = BinanceREST()
+        self.binance_rest = BinanceRestClient()
         self.binance_ws = BinanceWebSocket()
         
         # Storage

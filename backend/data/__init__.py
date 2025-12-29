@@ -2,14 +2,16 @@
 VELAS Data Module - работа с данными.
 
 Компоненты:
-- BinanceREST: REST API клиент
+- BinanceRestClient: REST API клиент
 - CandleStorage: Хранилище свечей (Parquet)
 """
 
-from .binance_rest import BinanceREST
+from .binance_rest import BinanceRestClient, KlineData, BinanceInterval
 from .storage import CandleStorage
 
 __all__ = [
-    "BinanceREST",
+    "BinanceRestClient",
+    "KlineData",
+    "BinanceInterval",
     "CandleStorage",
 ]
