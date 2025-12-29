@@ -1,10 +1,20 @@
-"""
-VELAS Trading System - Core Module
+# VELAS Trading System - Core Module
+# Ядро системы: индикатор Velas, сигналы, TP/SL
 
-Strategy and indicator components (implemented in VELAS-03+):
-- Velas indicator calculation
-- Signal generation
-- Position management
-"""
+__version__ = "0.3.0"
 
-__version__ = "0.2.0"
+from .velas_indicator import VelasIndicator, VelasPreset, VELAS_PRESETS_60
+from .signals import SignalGenerator, Signal, SignalType
+from .tpsl import TPSLManager, TPSLConfig, StopManagement
+
+__all__ = [
+    "VelasIndicator",
+    "VelasPreset", 
+    "VELAS_PRESETS_60",
+    "SignalGenerator",
+    "Signal",
+    "SignalType",
+    "TPSLManager",
+    "TPSLConfig",
+    "StopManagement",
+]

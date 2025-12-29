@@ -1,58 +1,42 @@
 @echo off
-REM VELAS Trading System - Test Runner (Windows)
-REM Phase: VELAS-02 Data Layer
+REM VELAS-03-BACKTEST Test Runner
+REM Run all tests for backtest engine
 
-REM Switch to script directory (important!)
 cd /d "%~dp0"
 
-echo ============================================================
-echo VELAS-02 Data Layer Tests
-echo ============================================================
-echo Working directory: %CD%
-echo ============================================================
-
-REM Check Python
-python --version >nul 2>&1
-if %errorlevel% neq 0 (
-    echo ERROR: Python not found
-    exit /b 1
-)
+echo ========================================
+echo VELAS-03-BACKTEST Test Suite
+echo ========================================
 
 REM Create virtual environment if not exists
-if not exist venv (
+if not exist "venv" (
     echo Creating virtual environment...
     python -m venv venv
 )
 
-REM Activate virtual environment
-call venv\Scripts\activate.bat
-
-REM Install dependencies
+REM Activate venv and install dependencies
 echo Installing dependencies...
-pip install -q -r requirements.txt
+call venv\Scripts\activate.bat
+pip install --upgrade pip -q
+pip install -r requirements.txt -q
 
 REM Run tests
 echo.
 echo Running tests...
-echo ============================================================
+echo ========================================
+python -m pytest tests/ -v --tb=short
 
-python -m pytest tests/test_data_layer.py -v --tb=short
-
-REM Check result
-if %errorlevel% neq 0 (
-    echo.
-    echo ============================================================
-    echo TESTS FAILED
-    echo ============================================================
-    exit /b 1
-)
+REM Capture exit code
+set EXITCODE=%ERRORLEVEL%
 
 echo.
-echo ============================================================
-echo ALL TESTS PASSED
-echo ============================================================
+echo ========================================
+if %EXITCODE% == 0 (
+    echo All tests PASSED!
+) else (
+    echo Some tests FAILED!
+)
+echo ========================================
 
-REM Deactivate
 deactivate
-
-exit /b 0
+exit /b %EXITCODE%
