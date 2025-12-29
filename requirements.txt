@@ -1,13 +1,38 @@
-# VELAS-03-BACKTEST Dependencies
-# Backtest Engine Requirements
+# VELAS Trading System - Requirements
+# Python 3.11+
 
 # Core
-pandas>=2.0.0
-numpy>=1.24.0
+pandas>=2.1.0
+numpy>=1.26.0
+pyarrow>=14.0.0
+
+# Technical Analysis
+ta>=0.11.0
+
+# API & Web
+fastapi>=0.109.0
+uvicorn>=0.27.0
+websockets>=12.0
+aiohttp>=3.9.0
+python-binance>=1.0.19
+
+# Database
+sqlalchemy>=2.0.25
+alembic>=1.13.0
+
+# Validation
+pydantic>=2.5.0
+pydantic-settings>=2.1
+
+# Telegram
+python-telegram-bot>=20.7
+
+# Config & Utils
+pyyaml>=6.0.1
+loguru>=0.7.2
+python-dotenv>=1.0.0
 
 # Testing
 pytest>=7.4.0
-pytest-asyncio>=0.21.0
-
-# Type hints
-typing-extensions>=4.5.0
+pytest-asyncio>=0.23.0
+httpx>=0.26.0

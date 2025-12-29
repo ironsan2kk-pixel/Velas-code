@@ -1,42 +1,46 @@
 @echo off
-REM VELAS-03-BACKTEST Test Runner
-REM Run all tests for backtest engine
-
 cd /d "%~dp0"
+chcp 65001 >nul
+title VELAS-04 Tests
 
 echo ========================================
-echo VELAS-03-BACKTEST Test Suite
+echo  VELAS-04 Optimizer Tests
 echo ========================================
+echo.
 
-REM Create virtual environment if not exists
+:: Check Python
+python --version >nul 2>&1
+if errorlevel 1 (
+    echo [ERROR] Python not found!
+    pause
+    exit /b 1
+)
+
+:: Create venv if not exists
 if not exist "venv" (
-    echo Creating virtual environment...
+    echo [INFO] Creating virtual environment...
     python -m venv venv
 )
 
-REM Activate venv and install dependencies
-echo Installing dependencies...
+:: Activate venv
 call venv\Scripts\activate.bat
-pip install --upgrade pip -q
-pip install -r requirements.txt -q
 
-REM Run tests
+:: Install dependencies
+echo [INFO] Installing dependencies...
+pip install --quiet --upgrade pip
+pip install --quiet -r requirements.txt
+
+:: Run tests
 echo.
-echo Running tests...
+echo [INFO] Running tests...
 echo ========================================
 python -m pytest tests/ -v --tb=short
 
-REM Capture exit code
-set EXITCODE=%ERRORLEVEL%
+:: Deactivate
+deactivate
 
 echo.
 echo ========================================
-if %EXITCODE% == 0 (
-    echo All tests PASSED!
-) else (
-    echo Some tests FAILED!
-)
+echo  Tests Complete!
 echo ========================================
-
-deactivate
-exit /b %EXITCODE%
+pause

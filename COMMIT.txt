@@ -1,13 +1,27 @@
-VELAS-03: Backtest Engine - indicator, signals, TP/SL, metrics
+VELAS-04: Optimizer - Grid Search, Walk-Forward, Robustness
 
 Добавлено:
-- backend/core/velas_indicator.py — перевод Pine Script индикатора (60 пресетов i1-i5)
-- backend/core/signals.py — генерация LONG/SHORT с фильтрами (Volume, RSI, ADX)
-- backend/core/tpsl.py — TP1-6 (1-14%), SL 8.5%, каскадный стоп, БУ
-- backend/backtest/trade.py — симуляция сделок с учётом TP/SL
-- backend/backtest/metrics.py — WinRate, Sharpe, Sortino, MaxDD, Profit Factor
-- backend/backtest/engine.py — движок бэктестинга с поиском лучшего пресета
-- tests/test_velas_indicator.py — 24 теста
-- tests/test_signals.py — 24 теста
+- backend/backtest/optimizer.py: Grid search по 60 пресетам i1-i5
+  - OptimizationConfig для настройки параметров
+  - VelasOptimizer для запуска grid search
+  - Composite score на основе Sharpe, PF, WinRate, DD
+  - Фильтрация по минимальным требованиям
 
-Итого: 48 тестов пройдено
+- backend/backtest/walk_forward.py: Walk-Forward Analysis
+  - 6 месяцев train / 2 месяца test (настраиваемо)
+  - Проверка Out-of-Sample результатов
+  - Efficiency = test_score / train_score
+  - Отклонение нестабильных результатов
+
+- backend/backtest/robustness.py: Проверка устойчивости
+  - Тестирование соседних параметров ±15%
+  - Robustness score (0-100)
+  - Отклонение хрупких (overfitted) результатов
+
+- tests/test_optimizer.py: 25+ тестов для всех модулей
+
+Ключевые особенности:
+- Anti-overfitting: WF + Robustness двойная проверка
+- Configurable: все параметры настраиваемы
+- Dataclass-based: чистая структура данных
+- DataFrame export: результаты в pandas для анализа

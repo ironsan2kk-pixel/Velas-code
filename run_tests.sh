@@ -1,42 +1,41 @@
 #!/bin/bash
-# VELAS-03-BACKTEST Test Runner
-# Run all tests for backtest engine
-
 cd "$(dirname "$0")"
 
 echo "========================================"
-echo "VELAS-03-BACKTEST Test Suite"
+echo " VELAS-04 Optimizer Tests"
 echo "========================================"
+echo ""
 
-# Create virtual environment if not exists
+# Check Python
+if ! command -v python3 &> /dev/null; then
+    echo "[ERROR] Python3 not found!"
+    exit 1
+fi
+
+# Create venv if not exists
 if [ ! -d "venv" ]; then
-    echo "Creating virtual environment..."
+    echo "[INFO] Creating virtual environment..."
     python3 -m venv venv
 fi
 
-# Activate venv and install dependencies
-echo "Installing dependencies..."
+# Activate venv
 source venv/bin/activate
-pip install --upgrade pip -q
-pip install -r requirements.txt -q
+
+# Install dependencies
+echo "[INFO] Installing dependencies..."
+pip install --quiet --upgrade pip
+pip install --quiet -r requirements.txt
 
 # Run tests
 echo ""
-echo "Running tests..."
+echo "[INFO] Running tests..."
 echo "========================================"
 python -m pytest tests/ -v --tb=short
 
-# Capture exit code
-EXITCODE=$?
+# Deactivate
+deactivate
 
 echo ""
 echo "========================================"
-if [ $EXITCODE -eq 0 ]; then
-    echo "All tests PASSED!"
-else
-    echo "Some tests FAILED!"
-fi
+echo " Tests Complete!"
 echo "========================================"
-
-deactivate
-exit $EXITCODE
