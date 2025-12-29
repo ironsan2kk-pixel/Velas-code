@@ -1,1 +1,1 @@
-"""VELAS Backend Package."""
+"""VELAS Module."""

@@ -1,1 +1,1 @@
-"""VELAS API Module."""
+"""VELAS Module."""

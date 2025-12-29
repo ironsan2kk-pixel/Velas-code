@@ -1,119 +1,130 @@
-# VELAS Trading System - Main Configuration
-# Copy to config.yaml and adjust values
+# VELAS Trading System - Конфигурация
+# Скопируйте этот файл в config.yaml и заполните значения
 
-# Data settings
-data:
-  # Historical data storage
-  storage_path: "./data/candles"
-  storage_format: "parquet"  # parquet, csv
-  
-  # Binance REST API settings
-  rest:
-    base_url: "https://api.binance.com"
-    futures_url: "https://fapi.binance.com"
-    timeout: 30
-    max_retries: 3
-    retry_delay: 1.0
-    rate_limit_weight: 1200  # requests per minute
-    
-  # WebSocket settings
-  websocket:
-    base_url: "wss://stream.binance.com:9443/ws"
-    futures_url: "wss://fstream.binance.com/ws"
-    ping_interval: 180  # seconds
-    ping_timeout: 10
-    reconnect_delay: 5
-    max_reconnects: 10
-    
-  # Download settings
-  download:
-    history_months: 12  # months to download
-    chunk_days: 30  # days per API request
-    parallel_downloads: 3
-
-# Trading parameters
-trading:
-  # Take profit levels (%)
-  tp_levels:
-    tp1: 1.0
-    tp2: 2.0
-    tp3: 3.0
-    tp4: 4.0
-    tp5: 7.5
-    tp6: 14.0
-    
-  # TP distribution (%)
-  tp_distribution:
-    tp1: 17.0
-    tp2: 17.0
-    tp3: 17.0
-    tp4: 17.0
-    tp5: 16.0
-    tp6: 16.0
-    
-  # Stop loss
-  stop_loss: 8.5
-  
-  # Stop management
-  stop_management:
-    breakeven_after_tp: 1  # Move SL to entry after TPx
-    cascade_stop: true  # TP1→Entry, TP2→TP1, etc.
-    
-  # Position sizing
-  risk_per_trade: 2.0  # % of portfolio
-  max_positions: 5
-  correlation_threshold: 0.7
-
-# Volatility regimes
-volatility:
-  atr_period: 14
-  lookback: 100
-  regimes:
-    low:
-      min_ratio: 0.0
-      max_ratio: 0.7
-      tp_multiplier: 0.8
-      sl_multiplier: 0.8
-    normal:
-      min_ratio: 0.7
-      max_ratio: 1.3
-      tp_multiplier: 1.0
-      sl_multiplier: 1.0
-    high:
-      min_ratio: 1.3
-      max_ratio: 999.0
-      tp_multiplier: 1.3
-      sl_multiplier: 1.2
-
-# Velas indicator parameter sets (60 combinations)
-# i1: channel period, i2: ATR period, i3-i5: multipliers
-velas:
-  default_set: 1
-  auto_select: true  # Auto-select best parameter set
-
-# Database settings
-database:
-  path: "./data/velas.db"
-  echo: false
-
-# Logging
-logging:
-  level: "INFO"
-  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-  file: "./logs/velas.log"
-  max_bytes: 10485760  # 10MB
-  backup_count: 5
-
-# Telegram (optional, for notifications)
+# ═══════════════════════════════════════════════════════════════
+# TELEGRAM (обязательно для отправки сигналов)
+# ═══════════════════════════════════════════════════════════════
 telegram:
-  enabled: false
-  bot_token: ""
-  chat_id: ""
+  # Получите токен у @BotFather в Telegram
+  bot_token: "YOUR_TELEGRAM_BOT_TOKEN"
   
-# API Server (for dashboard)
+  # ID чата/канала для отправки сигналов
+  # Для получения ID: добавьте бота в канал, отправьте сообщение,
+  # затем откройте https://api.telegram.org/bot<TOKEN>/getUpdates
+  chat_id: "-100123456789"
+  
+  # Настройки уведомлений
+  send_signals: true      # Отправлять торговые сигналы
+  send_updates: true      # Отправлять обновления позиций (TP hit, SL moved)
+  send_alerts: true       # Отправлять системные алерты
+
+# ═══════════════════════════════════════════════════════════════
+# TRADING (торговые настройки)
+# ═══════════════════════════════════════════════════════════════
+trading:
+  # Включить/выключить торговлю
+  enabled: true
+  
+  # Максимум одновременных позиций (1-10)
+  max_positions: 5
+  
+  # Риск на сделку в % от баланса (0.5-5.0)
+  risk_percent: 2.0
+  
+  # Лимит portfolio heat в % (сумма всех рисков)
+  portfolio_heat_limit: 15.0
+  
+  # Минимальная уверенность сигнала (0.0-1.0)
+  min_confidence: 0.6
+  
+  # Время жизни сигнала в минутах (после чего отменяется)
+  signal_expiry_minutes: 30
+  
+  # Плечо по умолчанию (Cornix настройка)
+  default_leverage: 10
+
+# ═══════════════════════════════════════════════════════════════
+# PORTFOLIO (портфельные настройки)
+# ═══════════════════════════════════════════════════════════════
+portfolio:
+  # Начальный баланс в USDT
+  initial_balance: 10000.0
+  
+  # Лимит корреляции между парами (0.0-1.0)
+  # Если две пары коррелируют выше этого значения,
+  # система не откроет позицию по второй
+  correlation_limit: 0.7
+  
+  # Максимальная просадка для автоматической паузы
+  max_drawdown_percent: 15.0
+  
+  # Пауза после N убыточных сделок подряд
+  auto_pause_loss_streak: 3
+
+# ═══════════════════════════════════════════════════════════════
+# API (настройки API сервера)
+# ═══════════════════════════════════════════════════════════════
 api:
-  host: "127.0.0.1"
+  # Хост и порт для FastAPI
+  host: "0.0.0.0"
   port: 8000
+  
+  # Включить автоперезагрузку (для разработки)
+  reload: true
+  
+  # CORS origins (для фронтенда)
   cors_origins:
+    - "http://localhost:5173"
+    - "http://127.0.0.1:5173"
     - "http://localhost:3000"
-    - "http://127.0.0.1:3000"
+
+# ═══════════════════════════════════════════════════════════════
+# DATA (настройки данных)
+# ═══════════════════════════════════════════════════════════════
+data:
+  # Директория для хранения свечей
+  candles_dir: "data/candles"
+  
+  # Директория для пресетов
+  presets_dir: "data/presets"
+  
+  # Директория для состояния
+  state_dir: "data/state"
+  
+  # Binance настройки (публичный API, ключи НЕ нужны)
+  binance:
+    rest_url: "https://api.binance.com"
+    ws_url: "wss://stream.binance.com:9443/ws"
+    rate_limit: 1200  # запросов в минуту
+
+# ═══════════════════════════════════════════════════════════════
+# SYSTEM (системные настройки)
+# ═══════════════════════════════════════════════════════════════
+system:
+  # Уровень логирования: DEBUG, INFO, WARNING, ERROR
+  log_level: "INFO"
+  
+  # Директория для логов
+  log_dir: "logs"
+  
+  # Интервал обновления данных в секундах
+  data_update_interval: 5
+  
+  # Включить подробное логирование HTTP запросов
+  debug_http: false
+
+# ═══════════════════════════════════════════════════════════════
+# ALERTS (настройки алертов)
+# ═══════════════════════════════════════════════════════════════
+alerts:
+  # Глобальное включение алертов
+  enabled: true
+  
+  # Порог серии убытков для алерта
+  loss_streak_threshold: 3
+  
+  # Порог низкого WinRate для алерта
+  low_winrate_threshold: 50.0
+  
+  # Порог высокой просадки для алерта
+  high_drawdown_threshold: 10.0

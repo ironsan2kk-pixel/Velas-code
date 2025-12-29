@@ -1,110 +1,35 @@
-VELAS-09: Полный Web Dashboard (ЗАВЕРШЕНИЕ ФАЗЫ)
+VELAS-10: Integration Package - START.bat и Live Engine
 
-🎯 ФАЗА VELAS-09 ЗАВЕРШЕНА НА 100%
+Добавлено:
+- START.bat — главный лаунчер системы с меню (9 опций)
+- scripts/init_database.py — инициализация БД с тестовыми данными
+- scripts/download_history.py — скачивание свечей с Binance (20 пар × 3 TF)
+- config/config.example.yaml — пример конфигурации с комментариями
+- backend/live/engine.py — Live Trading Engine с WebSocket
+- backend/data/binance_ws.py — Binance WebSocket клиент
+- backend/telegram/bot.py — Telegram notifier с Cornix форматом
+- backend/core/velas_core.py — Индикатор Velas (каналы, ATR)
+- backend/core/signals.py — Генератор сигналов с фильтрами
+- backend/portfolio/manager.py — Portfolio Manager (риски, корреляции)
 
-════════════════════════════════════════════════════════════════
+START.bat функционал:
+[1] Запуск всего (Backend + Frontend + Live Engine)
+[2] Только Backend API
+[3] Только Frontend
+[4] Live Engine (торговля)
+[5] Установка зависимостей (Python + Node)
+[6] Скачивание истории свечей
+[7] Инициализация БД
+[8] Запуск тестов
+[9] Проверка статуса
 
-BACKEND API (10/10 routes):
-- dashboard.py: сводка системы, метрики, equity chart
-- positions.py: открытые/закрытые позиции, детали
-- history.py: история сделок, статистика, экспорт
-- signals.py: активные сигналы, pending, история
-- pairs.py: 20 торговых пар, детали, charts, сигналы по паре
-- analytics.py: equity curve, drawdown, месячная статистика, корреляция
-- backtest.py: запуск тестов, результаты, статус
-- settings.py: настройки системы, пресеты
-- alerts.py: настройки уведомлений, история
-- system.py: статус компонентов, логи, перезапуск
-- main.py: FastAPI приложение, CORS, error handling
+Интеграция:
+- Backend API (FastAPI) на порту 8000
+- Frontend (Vite) на порту 5173
+- SQLite база данных в data/velas.db
+- WebSocket для real-time обновлений
 
-FRONTEND INFRASTRUCTURE:
-- api/client.ts: Axios setup с interceptors
-- hooks/useApi.ts: 40+ React Query хуков для всех endpoints
-- hooks/useWebSocket.ts: WebSocket с auto-reconnect
-- types/index.ts: 500+ строк TypeScript типов
-- utils/cn.ts: Tailwind class merger
-
-UI COMPONENTS:
-- Card, CardHeader, CardContent, CardFooter
-- Badge (6 вариантов)
-- Button, Spinner, StatusIndicator, Input, Select
-- EquityCurve, MiniChart, PerformanceBar, PositionProgress
-- MainLayout, Sidebar, Header
-
-FRONTEND PAGES (10/10):
-1. Dashboard.tsx: главная панель с сводкой, метриками, equity chart, топ позиции
-2. Positions.tsx: таблица открытых позиций, детали с TP прогрессом, закрытие
-3. History.tsx: история сделок с фильтрами, пагинация, статистика, экспорт
-4. Signals.tsx: лог сигналов, pending сигналы, детали
-5. Pairs.tsx: список 20 пар, фильтры (сектор, волатильность), сортировка
-6. Analytics.tsx: equity curve, drawdown, месячная статистика, топ пары, корреляционная матрица
-7. Backtest.tsx: форма запуска, список результатов, детальный просмотр, метрики
-8. Settings.tsx: 5 вкладок (Trading, Portfolio, Telegram, System, Presets), управление
-9. Alerts.tsx: настройки уведомлений (4 категории), история с фильтрами
-10. System.tsx: ресурсы (CPU/RAM/Disk), статус компонентов, логи, перезапуск
-
-LAYOUT:
-- MainLayout.tsx: React Router для 10 страниц, адаптивный layout, 404
-- Sidebar.tsx: 10 пунктов меню, collapse/expand, active state
-- Header.tsx: Live/Offline статус, WebSocket, метрики, тема, уведомления
-
-════════════════════════════════════════════════════════════════
-
-ТЕХНОЛОГИИ:
-Backend: Python 3.11+, FastAPI, SQLAlchemy, Pydantic, WebSocket
-Frontend: React 18, TypeScript, Tailwind CSS, TanStack Query, React Router
-Data: Binance API, WebSocket, .parquet
-Testing: pytest (backend), vitest (frontend)
-
-КЛЮЧЕВЫЕ ФИЧИ:
-- 20 торговых пар (BTC, ETH, BNB, SOL, XRP, ADA, AVAX, DOGE, DOT, MATIC, LINK, UNI, ATOM, LTC, ETC, NEAR, APT, ARB, OP, INJ)
-- 3 таймфрейма (30m, 1H, 2H)
-- 180 adaptive presets (20 pairs × 3 timeframes × 3 volatility regimes)
-- 6 TP levels + cascade SL
-- Portfolio management (корреляция, heat tracking)
-- Telegram интеграция (Cornix format)
-- Real-time WebSocket updates
-- Dark + Light themes
-- Desktop + Mobile responsive
-- PWA ready
-
-СТАТИСТИКА:
-- Backend: 10 routes, 3 models, WebSocket
-- Frontend: 10 pages, 18+ components, 40+ hooks, 500+ типов
-- Total: ~8,000+ строк TypeScript кода
-- API endpoints: 30+ endpoints
-- UI Components: 18+
-- Charts: 5
-
-СТРУКТУРА:
-backend/
-├── api/
-│   ├── main.py
-│   ├── models.py
-│   └── routes/ (10 files)
-└── db/
-    ├── database.py
-    └── models.py
-
-frontend/src/
-├── api/client.ts
-├── hooks/ (useApi.ts, useWebSocket.ts)
-├── types/index.ts
-├── utils/cn.ts
-├── components/
-│   ├── ui/ (6 components)
-│   ├── charts/ (5 components)
-│   └── layout/ (3 components)
-└── pages/ (10 pages)
-
-════════════════════════════════════════════════════════════════
-
-ГОТОВНОСТЬ: 100%
-✅ Backend API: 10/10
-✅ Frontend Infrastructure: 100%
-✅ Frontend Pages: 10/10
-✅ Layout: 3/3
-✅ Charts: 5/5
-✅ UI Components: 100%
-
-СЛЕДУЮЩАЯ ФАЗА: VELAS-10 (Integration & Testing)
+Следующие шаги:
+- WebSocket интеграция frontend ↔ backend
+- E2E тестирование
+- Production оптимизация
