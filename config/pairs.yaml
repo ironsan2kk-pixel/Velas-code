@@ -1,0 +1,168 @@
+# VELAS Trading System - Trading Pairs Configuration
+# 20 pairs × 3 timeframes = 60 combinations
+
+pairs:
+  - symbol: BTCUSDT
+    name: Bitcoin
+    sector: BTC
+    enabled: true
+    
+  - symbol: ETHUSDT
+    name: Ethereum
+    sector: ETH
+    enabled: true
+    
+  - symbol: BNBUSDT
+    name: BNB
+    sector: CEX
+    enabled: true
+    
+  - symbol: SOLUSDT
+    name: Solana
+    sector: L1
+    enabled: true
+    
+  - symbol: XRPUSDT
+    name: Ripple
+    sector: OLD
+    enabled: true
+    
+  - symbol: ADAUSDT
+    name: Cardano
+    sector: OLD
+    enabled: true
+    
+  - symbol: AVAXUSDT
+    name: Avalanche
+    sector: L1
+    enabled: true
+    
+  - symbol: DOGEUSDT
+    name: Dogecoin
+    sector: MEME
+    enabled: true
+    
+  - symbol: DOTUSDT
+    name: Polkadot
+    sector: OLD
+    enabled: true
+    
+  - symbol: MATICUSDT
+    name: Polygon
+    sector: L2
+    enabled: true
+    
+  - symbol: LINKUSDT
+    name: Chainlink
+    sector: DEFI
+    enabled: true
+    
+  - symbol: UNIUSDT
+    name: Uniswap
+    sector: DEFI
+    enabled: true
+    
+  - symbol: ATOMUSDT
+    name: Cosmos
+    sector: L1
+    enabled: true
+    
+  - symbol: LTCUSDT
+    name: Litecoin
+    sector: OLD
+    enabled: true
+    
+  - symbol: ETCUSDT
+    name: Ethereum Classic
+    sector: OLD
+    enabled: true
+    
+  - symbol: NEARUSDT
+    name: Near Protocol
+    sector: L1
+    enabled: true
+    
+  - symbol: APTUSDT
+    name: Aptos
+    sector: L1
+    enabled: true
+    
+  - symbol: ARBUSDT
+    name: Arbitrum
+    sector: L2
+    enabled: true
+    
+  - symbol: OPUSDT
+    name: Optimism
+    sector: L2
+    enabled: true
+    
+  - symbol: INJUSDT
+    name: Injective
+    sector: DEFI
+    enabled: true
+
+# Sector definitions for portfolio diversification
+sectors:
+  BTC:
+    name: "Bitcoin"
+    max_positions: 1
+    pairs: [BTCUSDT]
+    
+  ETH:
+    name: "Ethereum"
+    max_positions: 1
+    pairs: [ETHUSDT]
+    
+  L1:
+    name: "Layer 1"
+    max_positions: 2
+    pairs: [SOLUSDT, AVAXUSDT, ATOMUSDT, NEARUSDT, APTUSDT]
+    
+  L2:
+    name: "Layer 2"
+    max_positions: 2
+    pairs: [MATICUSDT, ARBUSDT, OPUSDT]
+    
+  DEFI:
+    name: "DeFi"
+    max_positions: 2
+    pairs: [LINKUSDT, UNIUSDT, INJUSDT]
+    
+  OLD:
+    name: "Legacy"
+    max_positions: 2
+    pairs: [XRPUSDT, ADAUSDT, DOTUSDT, LTCUSDT, ETCUSDT]
+    
+  MEME:
+    name: "Meme"
+    max_positions: 1
+    pairs: [DOGEUSDT]
+    
+  CEX:
+    name: "Exchange"
+    max_positions: 1
+    pairs: [BNBUSDT]
+
+# Timeframes configuration
+timeframes:
+  - interval: "30m"
+    minutes: 30
+    candles_per_day: 48
+    description: "Fast signals"
+    
+  - interval: "1h"
+    minutes: 60
+    candles_per_day: 24
+    description: "Main timeframe"
+    
+  - interval: "2h"
+    minutes: 120
+    candles_per_day: 12
+    description: "Conservative"
+
+# Binance API intervals mapping
+binance_intervals:
+  "30m": "30m"
+  "1h": "1h"
+  "2h": "2h"

@@ -1,217 +1,218 @@
-# VELAS Trading System v2
+# VELAS-02: Data Layer
 
-![Version](https://img.shields.io/badge/version-2.0.0-blue)
-![Python](https://img.shields.io/badge/python-3.11+-green)
-![React](https://img.shields.io/badge/react-18+-61dafb)
-![License](https://img.shields.io/badge/license-Private-red)
+## Overview
 
-Локальная криптотрейдинговая система для генерации торговых сигналов.
+This phase implements the data layer for VELAS Trading System:
+- Binance REST API client for historical data
+- Binance WebSocket client for real-time data
+- Parquet storage for efficient OHLCV data management
 
----
+## Components
 
-## 📋 Описание
+### 1. Binance REST Client (`backend/data/binance_rest.py`)
 
-VELAS Trading System — это автоматизированная система для:
-- Анализа криптовалютных пар (20 пар × 3 таймфрейма)
-- Генерации торговых сигналов на основе индикатора Velas
-- Отправки сигналов в Telegram (формат Cornix)
-- Мониторинга через Web Dashboard
+Async client for Binance public API (no API keys required).
 
----
+**Features:**
+- Rate limiting with automatic backoff
+- Pagination for large historical downloads
+- Supports both Spot and Futures endpoints
+- DataFrame conversion for pandas integration
 
-## 🏗 Архитектура
+**Usage:**
+```python
+from backend.data import BinanceRestClient
+
+async with BinanceRestClient() as client:
+    # Get recent klines
+    klines = await client.get_klines("BTCUSDT", "1h", limit=100)
+    
+    # Download full history
+    klines = await client.get_historical_klines(
+        symbol="BTCUSDT",
+        interval="1h",
+        start_time=start_ms,
+    )
+    
+    # Convert to DataFrame
+    df = client.klines_to_dataframe(klines)
+```
+
+### 2. Binance WebSocket Client (`backend/data/binance_ws.py`)
+
+Real-time market data streaming via WebSocket.
+
+**Features:**
+- Multi-stream subscription (combined streams)
+- Automatic reconnection with exponential backoff
+- Heartbeat/ping-pong for connection health
+- Callback-based event handling
+
+**Usage:**
+```python
+from backend.data import BinanceWebSocketClient, KlineEvent
+
+client = BinanceWebSocketClient()
+
+def handle_kline(event: KlineEvent):
+    if event.is_closed:
+        print(f"New candle: {event.symbol} {event.close}")
+
+client.on_kline = handle_kline
+client.subscribe_klines(["BTCUSDT", "ETHUSDT"], ["1h", "30m"])
+
+await client.run()
+```
+
+### 3. Parquet Storage (`backend/data/storage.py`)
+
+Efficient storage for OHLCV candlestick data.
+
+**Features:**
+- Parquet format for compression and fast reads
+- Automatic partitioning by symbol/interval
+- Incremental updates (append new data)
+- Gap detection and validation
+
+**Usage:**
+```python
+from backend.data import CandleStorage
+
+storage = CandleStorage("./data/candles")
+
+# Save data
+storage.save(df, "BTCUSDT", "1h")
+
+# Load with filters
+df = storage.load("BTCUSDT", "1h", start_time=start_ms)
+
+# Append new data
+storage.append(new_df, "BTCUSDT", "1h")
+
+# Get statistics
+stats = storage.get_stats("BTCUSDT", "1h")
+```
+
+### 4. Download Script (`scripts/download_history.py`)
+
+Command-line tool for downloading historical data.
+
+**Usage:**
+```bash
+# Download all pairs (20) × all timeframes (30m, 1h, 2h)
+python scripts/download_history.py
+
+# Download single symbol
+python scripts/download_history.py --symbol BTCUSDT
+
+# Download 6 months instead of default 12
+python scripts/download_history.py --months 6
+
+# Incremental update (download only new data)
+python scripts/download_history.py --update
+
+# Parallel downloads
+python scripts/download_history.py --parallel 5
+```
+
+## Configuration
+
+### pairs.yaml
+Defines trading pairs and their sectors for portfolio diversification.
+
+### config.example.yaml
+Main configuration file. Copy to `config.yaml` and adjust:
+- Storage paths
+- API settings
+- Trading parameters
+- Volatility regimes
+
+## Directory Structure
 
 ```
-Binance API → Data Engine → Velas Core → Signal Generator → Telegram Bot
-                                ↓
-                          Portfolio Manager
-                                ↓
-                           Live Engine → Dashboard
-```
-
----
-
-## 📊 Торговые пары
-
-| Сектор | Пары |
-|--------|------|
-| BTC/ETH | BTCUSDT, ETHUSDT |
-| L1 | SOLUSDT, AVAXUSDT, ATOMUSDT, NEARUSDT, APTUSDT |
-| L2 | MATICUSDT, ARBUSDT, OPUSDT |
-| DeFi | LINKUSDT, UNIUSDT, INJUSDT |
-| Old | XRPUSDT, ADAUSDT, DOTUSDT, LTCUSDT, ETCUSDT |
-| Meme | DOGEUSDT |
-| CEX | BNBUSDT |
-
-**Таймфреймы:** 30m, 1h, 2h
-
----
-
-## 🛠 Технологии
-
-### Backend
-- Python 3.11+
-- FastAPI
-- SQLAlchemy
-- python-binance
-- python-telegram-bot
-
-### Frontend
-- React 18 + TypeScript
-- Vite
-- Tailwind CSS
-- TanStack Query
-- Recharts
-
----
-
-## 📁 Структура проекта
-
-```
-Velas-code/                    ← Git репозиторий
+velas-02/
 ├── backend/
-│   ├── core/                  ← Логика Velas
-│   ├── data/                  ← Binance API
-│   ├── backtest/              ← Бэктестинг
-│   ├── live/                  ← Live Engine
-│   ├── portfolio/             ← Portfolio Manager
-│   ├── telegram/              ← Telegram Bot
-│   ├── api/                   ← FastAPI
-│   ├── db/                    ← Database
-│   └── config/                ← Конфигурация
-├── frontend/
-│   └── src/
-│       ├── pages/             ← 10 страниц
-│       ├── components/        ← UI компоненты
-│       └── ...
-├── scripts/                   ← Утилиты
-├── tests/                     ← Тесты
-└── docs/                      ← Документация
-
-C:\velas\                      ← Локально (НЕ в Git)
-├── data/                      ← Свечи, пресеты
-├── logs/                      ← Логи
-├── config.yaml                ← Секреты
-└── START.bat                  ← Запуск
+│   └── data/
+│       ├── __init__.py
+│       ├── binance_rest.py    # REST API client
+│       ├── binance_ws.py      # WebSocket client
+│       └── storage.py         # Parquet storage
+├── config/
+│   ├── pairs.yaml             # Trading pairs
+│   └── config.example.yaml    # Configuration template
+├── scripts/
+│   └── download_history.py    # Download script
+├── tests/
+│   └── test_data_layer.py     # Unit tests
+├── requirements.txt
+├── run_tests.bat              # Windows test runner
+├── run_tests.sh               # Unix test runner
+└── README.md
 ```
 
----
+## Testing
 
-## ⚙️ Установка
-
-### 1. Клонировать репозиторий
-
+### Run all tests:
 ```bash
-git clone https://github.com/ironsan2kk-pixel/Velas-code.git
-cd Velas-code
+# Windows
+run_tests.bat
+
+# Unix/Linux/Mac
+./run_tests.sh
+
+# Or directly with pytest
+python -m pytest tests/ -v
 ```
 
-### 2. Backend
-
+### Run with network tests:
 ```bash
-cd backend
-python -m venv venv
-venv\Scripts\activate
+SKIP_NETWORK_TESTS=0 python -m pytest tests/ -v
+```
+
+## Data Format
+
+### Parquet Schema
+| Column | Type | Description |
+|--------|------|-------------|
+| timestamp | int64 | Open time (ms) |
+| open | float64 | Open price |
+| high | float64 | High price |
+| low | float64 | Low price |
+| close | float64 | Close price |
+| volume | float64 | Volume (base asset) |
+| close_time | int64 | Close time (ms) |
+| quote_volume | float64 | Volume (quote asset) |
+| trades | int64 | Number of trades |
+| taker_buy_base | float64 | Taker buy volume (base) |
+| taker_buy_quote | float64 | Taker buy volume (quote) |
+
+### Storage Structure
+```
+data/candles/
+├── BTCUSDT/
+│   ├── 30m.parquet
+│   ├── 1h.parquet
+│   └── 2h.parquet
+├── ETHUSDT/
+│   ├── 30m.parquet
+│   └── ...
+└── ...
+```
+
+## Next Steps
+
+After completing VELAS-02, proceed to:
+- **VELAS-03**: Backtesting Engine
+- **VELAS-04**: Strategy Optimization
+
+## Dependencies
+
+- Python 3.11+
+- pandas, numpy, pyarrow
+- aiohttp, websockets
+- pyyaml
+
+Install with:
+```bash
 pip install -r requirements.txt
 ```
-
-### 3. Frontend
-
-```bash
-cd frontend
-npm install
-```
-
-### 4. Конфигурация
-
-```bash
-# Скопировать пример конфига
-copy backend\config\config.example.yaml C:\velas\config.yaml
-
-# Отредактировать config.yaml - добавить API ключи
-```
-
-### 5. Создать локальные папки
-
-```bash
-mkdir C:\velas\data
-mkdir C:\velas\data\candles
-mkdir C:\velas\data\presets
-mkdir C:\velas\logs
-```
-
----
-
-## 🚀 Запуск
-
-### Через START.bat (рекомендуется)
-
-```bash
-C:\velas\START.bat
-```
-
-### Вручную
-
-```bash
-# Backend
-cd Velas-code\backend
-python -m uvicorn api.main:app --reload --port 8000
-
-# Frontend
-cd Velas-code\frontend
-npm run dev
-```
-
----
-
-## 📱 Dashboard
-
-- **URL:** http://localhost:5173
-- **API:** http://localhost:8000
-- **Docs:** http://localhost:8000/docs
-
-### Страницы
-
-| Страница | Описание |
-|----------|----------|
-| Главная | Сводка, метрики, графики |
-| Позиции | Открытые позиции |
-| История | Закрытые сделки |
-| Сигналы | Лог сигналов |
-| Пары | 20 пар с детализацией |
-| Аналитика | Графики, статистика |
-| Бэктест | Тестирование стратегий |
-| Настройки | Конфигурация |
-| Уведомления | Telegram, Push |
-| Система | Логи, статус |
-
----
-
-## 📈 Методология
-
-### Walk-Forward Analysis
-- Train: 6 месяцев
-- Test: 2 месяца (unseen data)
-- Минимум 4-5 периодов
-
-### Критерии пресета
-- Sharpe ≥ 1.2
-- WinRate TP1 ≥ 65%
-- Max Drawdown ≤ 15%
-- Robustness ≥ 0.8
-
----
-
-## 📝 Лицензия
-
-Private. Все права защищены.
-
----
-
-## 👤 Автор
-
-ironsan2kk-pixel
-
----
-
-*Версия 2.0.0 | Декабрь 2024*

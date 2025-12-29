@@ -1,0 +1,49 @@
+# Virtual environment
+venv/
+.venv/
+env/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Pytest
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+*.log
+logs/*.log
+
+# Data (large files)
+data/candles/
+*.parquet
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Environment
+.env
+.env.local
+config.yaml
+
+# Build
+dist/
+build/
+*.egg-info/
+
+# Temp
+*.tmp
+*.bak
