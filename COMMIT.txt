@@ -1,27 +1,10 @@
-VELAS-04: Optimizer - Grid Search, Walk-Forward, Robustness
+VELAS-04: Fix optimizer and robustness bugs
 
-Добавлено:
-- backend/backtest/optimizer.py: Grid search по 60 пресетам i1-i5
-  - OptimizationConfig для настройки параметров
-  - VelasOptimizer для запуска grid search
-  - Composite score на основе Sharpe, PF, WinRate, DD
-  - Фильтрация по минимальным требованиям
+Исправлено:
+- optimizer.py:374 - AttributeError when best_result is None
+  Было: f-string с прямым доступом к composite_score
+  Стало: предварительная проверка и сохранение в переменную
 
-- backend/backtest/walk_forward.py: Walk-Forward Analysis
-  - 6 месяцев train / 2 месяца test (настраиваемо)
-  - Проверка Out-of-Sample результатов
-  - Efficiency = test_score / train_score
-  - Отклонение нестабильных результатов
-
-- backend/backtest/robustness.py: Проверка устойчивости
-  - Тестирование соседних параметров ±15%
-  - Robustness score (0-100)
-  - Отклонение хрупких (overfitted) результатов
-
-- tests/test_optimizer.py: 25+ тестов для всех модулей
-
-Ключевые особенности:
-- Anti-overfitting: WF + Robustness двойная проверка
-- Configurable: все параметры настраиваемы
-- Dataclass-based: чистая структура данных
-- DataFrame export: результаты в pandas для анализа
+- robustness.py:313 - ValueError: index должен быть 0-59
+  Было: index=99 для кастомных пресетов
+  Стало: использует индекс базового пресета для валидации

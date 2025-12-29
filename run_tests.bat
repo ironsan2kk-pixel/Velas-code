@@ -35,10 +35,10 @@ echo.
 echo [INFO] Running tests...
 echo ========================================
 python -m pytest tests/ -v --tb=short
-
+pause
 :: Deactivate
 deactivate
-
+pause
 echo.
 echo ========================================
 echo  Tests Complete!

@@ -369,9 +369,10 @@ class VelasOptimizer:
         
         result.execution_time_sec = time.time() - start_time
         
+        best_score = result.best_result.composite_score if result.best_result else 0.0
         logger.info(
             f"Grid search complete: {result.valid_presets_count}/{result.total_presets_tested} valid, "
-            f"best score={result.best_result.composite_score:.2f if result.best_result else 0:.2f}, "
+            f"best score={best_score:.2f}, "
             f"time={result.execution_time_sec:.1f}s"
         )
         

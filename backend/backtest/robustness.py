@@ -309,9 +309,10 @@ class RobustnessChecker:
         Returns:
             (backtest_result, metrics, score)
         """
-        # Создаём кастомный пресет
+        # Создаём кастомный пресет с индексом базового (для совместимости)
+        # Используем индекс 0-59 чтобы пройти валидацию
         preset = VelasPreset(
-            index=99,  # Custom index
+            index=min(59, max(0, self.base_preset.index)),  # Валидный индекс
             i1=i1,
             i2=i2,
             i3=i3,
