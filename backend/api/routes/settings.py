@@ -139,7 +139,7 @@ async def get_preset(preset_id: str = Path(...)) -> ApiResponse:
 
 
 @router.put("/presets/{preset_id}")
-async def update_preset(preset_id: str = Path(...), update: Preset) -> ApiResponse:
+async def update_preset(update: Preset, preset_id: str = Path(...)) -> ApiResponse:
     """Update preset."""
     
     for i, preset in enumerate(_presets):
@@ -149,3 +149,4 @@ async def update_preset(preset_id: str = Path(...), update: Preset) -> ApiRespon
             return ApiResponse(data=update.model_dump())
     
     raise HTTPException(status_code=404, detail="Preset not found")
+

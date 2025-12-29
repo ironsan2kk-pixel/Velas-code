@@ -1,16 +1,14 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-interface UISettings {
+interface SettingsState {
+  // Direct state fields
   sidebarCollapsed: boolean;
   showProfitInPercent: boolean;
   compactMode: boolean;
   soundEnabled: boolean;
   notificationsEnabled: boolean;
-}
-
-interface SettingsState {
-  ui: UISettings;
+  // Actions
   setSidebarCollapsed: (collapsed: boolean) => void;
   toggleSidebar: () => void;
   setShowProfitInPercent: (show: boolean) => void;
@@ -20,7 +18,7 @@ interface SettingsState {
   resetSettings: () => void;
 }
 
-const defaultSettings: UISettings = {
+const defaultSettings = {
   sidebarCollapsed: false,
   showProfitInPercent: true,
   compactMode: false,
@@ -31,40 +29,29 @@ const defaultSettings: UISettings = {
 export const useSettingsStore = create<SettingsState>()(
   persist(
     (set) => ({
-      ui: defaultSettings,
+      // Initial state
+      ...defaultSettings,
       
       setSidebarCollapsed: (collapsed) =>
-        set((state) => ({
-          ui: { ...state.ui, sidebarCollapsed: collapsed },
-        })),
+        set({ sidebarCollapsed: collapsed }),
       
       toggleSidebar: () =>
-        set((state) => ({
-          ui: { ...state.ui, sidebarCollapsed: !state.ui.sidebarCollapsed },
-        })),
+        set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
       
       setShowProfitInPercent: (show) =>
-        set((state) => ({
-          ui: { ...state.ui, showProfitInPercent: show },
-        })),
+        set({ showProfitInPercent: show }),
       
       setCompactMode: (compact) =>
-        set((state) => ({
-          ui: { ...state.ui, compactMode: compact },
-        })),
+        set({ compactMode: compact }),
       
       setSoundEnabled: (enabled) =>
-        set((state) => ({
-          ui: { ...state.ui, soundEnabled: enabled },
-        })),
+        set({ soundEnabled: enabled }),
       
       setNotificationsEnabled: (enabled) =>
-        set((state) => ({
-          ui: { ...state.ui, notificationsEnabled: enabled },
-        })),
+        set({ notificationsEnabled: enabled }),
       
       resetSettings: () =>
-        set({ ui: defaultSettings }),
+        set(defaultSettings),
     }),
     {
       name: 'velas-settings',
