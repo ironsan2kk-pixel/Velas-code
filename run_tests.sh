@@ -1,41 +1,44 @@
 #!/bin/bash
+
+# Переходим в директорию скрипта
 cd "$(dirname "$0")"
 
-echo "========================================"
-echo " VELAS-04 Optimizer Tests"
-echo "========================================"
+echo "============================================"
+echo "  VELAS Tests Runner - Unix"
+echo "============================================"
 echo ""
 
-# Check Python
-if ! command -v python3 &> /dev/null; then
-    echo "[ERROR] Python3 not found!"
-    exit 1
-fi
-
-# Create venv if not exists
+# Создаём виртуальное окружение если нет
 if [ ! -d "venv" ]; then
-    echo "[INFO] Creating virtual environment..."
+    echo "Создание виртуального окружения..."
     python3 -m venv venv
 fi
 
-# Activate venv
+# Активируем venv
 source venv/bin/activate
 
-# Install dependencies
-echo "[INFO] Installing dependencies..."
-pip install --quiet --upgrade pip
-pip install --quiet -r requirements.txt
+# Устанавливаем зависимости
+echo "Установка зависимостей..."
+pip install -q pytest pandas numpy pyyaml
 
-# Run tests
+# Запускаем тесты
 echo ""
-echo "[INFO] Running tests..."
-echo "========================================"
+echo "Запуск тестов..."
+echo "============================================"
 python -m pytest tests/ -v --tb=short
 
-# Deactivate
-deactivate
+# Код возврата
+EXITCODE=$?
 
 echo ""
-echo "========================================"
-echo " Tests Complete!"
-echo "========================================"
+echo "============================================"
+if [ $EXITCODE -eq 0 ]; then
+    echo "  ✅ Все тесты прошли успешно!"
+else
+    echo "  ❌ Некоторые тесты не прошли"
+fi
+echo "============================================"
+
+deactivate
+
+exit $EXITCODE

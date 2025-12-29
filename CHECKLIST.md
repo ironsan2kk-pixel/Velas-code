@@ -1,8 +1,8 @@
 # VELAS v2 — ЧЕКЛИСТ
 
 **Последнее обновление:** 2024-12-29  
-**Текущая фаза:** VELAS-04  
-**Прогресс:** 4/12 фаз
+**Текущая фаза:** VELAS-05  
+**Прогресс:** 5/12 фаз
 
 ---
 
@@ -15,6 +15,7 @@
 | 2024-12-28 | velas-02 | Data: binance_rest, binance_ws, storage | 28 тестов |
 | 2024-12-29 | velas-03 | Backtest: engine, metrics, trade | 48 тестов |
 | 2024-12-29 | velas-04 | Optimizer: optimizer, walk_forward, robustness | — |
+| 2024-12-29 | velas-05 | Presets: volatility, presets, generator | — |
 
 ---
 
@@ -83,7 +84,7 @@
 
 ---
 
-## Фаза 4: Optimizer [IN PROGRESS]
+## Фаза 4: Optimizer [DONE]
 
 ### 4.1 Grid Search
 - [x] backend/backtest/optimizer.py
@@ -102,19 +103,40 @@
 
 ### 4.4 Тесты
 - [x] tests/test_optimizer.py
-- [ ] Запуск на сервере
+- [x] Запуск на сервере
 
 ---
 
-## Фаза 5: Filters & Presets [TODO]
+## Фаза 5: Filters & Presets [DONE]
 
-### 5.1 Adaptive Filters
-- [ ] Адаптация по волатильности
-- [ ] ATR ratio режимы
+### 5.1 Volatility Analyzer
+- [x] backend/core/volatility.py
+- [x] ATR Ratio расчёт
+- [x] 3 режима (low/normal/high)
+- [x] Автоопределение режима
+- [x] Множители TP/SL для режимов
 
-### 5.2 Preset Generator
-- [ ] Генерация 180 пресетов
-- [ ] Сохранение в YAML
+### 5.2 Presets Manager
+- [x] backend/core/presets.py
+- [x] TradingPreset dataclass
+- [x] PresetManager (загрузка/сохранение)
+- [x] PresetGenerator (генерация 180 пресетов)
+- [x] YAML формат
+
+### 5.3 Constants
+- [x] 20 торговых пар
+- [x] 3 таймфрейма (30m, 1h, 2h)
+- [x] 3 режима волатильности
+- [x] Секторы для диверсификации
+
+### 5.4 Scripts
+- [x] scripts/generate_presets.py
+- [x] CLI с опциями (--symbol, --dry-run, --summary)
+
+### 5.5 Тесты
+- [x] tests/test_volatility.py
+- [x] tests/test_presets.py
+- [x] run_tests.bat / run_tests.sh
 
 ---
 
@@ -155,13 +177,13 @@
 ## 📊 ОБЩИЙ ПРОГРЕСС
 
 ```
-[████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 33%
+[████████████████░░░░░░░░░░░░░░░░░░░░░░░░] 42%
 
 ✅ VELAS-01: Infrastructure
 ✅ VELAS-02: Data Engine  
 ✅ VELAS-03: Backtest Engine
-⏳ VELAS-04: Optimizer ← CURRENT
-⬜ VELAS-05: Filters & Presets
+✅ VELAS-04: Optimizer
+✅ VELAS-05: Filters & Presets ← CURRENT
 ⬜ VELAS-06: Live Engine
 ⬜ VELAS-07: Telegram
 ⬜ VELAS-08: Frontend Base
@@ -169,6 +191,67 @@
 ⬜ VELAS-10: Frontend Pages 2
 ⬜ VELAS-11: Frontend Final
 ⬜ VELAS-12: Integration
+```
+
+---
+
+## 📦 СТРУКТУРА МОДУЛЯ VELAS-05
+
+```
+backend/core/
+├── __init__.py          ← Экспорт всех компонентов
+├── volatility.py        ← Анализатор волатильности (ATR Ratio)
+├── presets.py           ← Менеджер и генератор пресетов
+├── velas_indicator.py   ← Индикатор (из VELAS-03)
+├── signals.py           ← Генератор сигналов
+└── tpsl.py              ← TP/SL логика
+
+scripts/
+└── generate_presets.py  ← CLI скрипт генерации
+
+tests/
+├── test_volatility.py   ← Тесты волатильности
+└── test_presets.py      ← Тесты пресетов
+
+run_tests.bat            ← Windows runner
+run_tests.sh             ← Unix runner
+```
+
+---
+
+## 🎯 КЛЮЧЕВЫЕ КОМПОНЕНТЫ VELAS-05
+
+### VolatilityAnalyzer
+```python
+from backend.core import VolatilityAnalyzer, VolatilityRegime
+
+analyzer = VolatilityAnalyzer(df)
+regime = analyzer.get_regime()  # VolatilityRegime.LOW/NORMAL/HIGH
+result = analyzer.analyze()     # Полный анализ с метриками
+```
+
+### PresetManager
+```python
+from backend.core import PresetManager, TradingPreset
+
+manager = PresetManager("data/presets")
+
+# Загрузка
+preset = manager.get("BTCUSDT", "1h", "normal")
+
+# Адаптивная загрузка (автоопределение режима)
+preset = manager.get_adaptive("BTCUSDT", "1h", df)
+
+# Список всех
+all_presets = manager.load_all()
+```
+
+### PresetGenerator
+```python
+from backend.core import PresetGenerator
+
+generator = PresetGenerator("data/presets")
+generator.generate_all()  # 180 пресетов
 ```
 
 ---

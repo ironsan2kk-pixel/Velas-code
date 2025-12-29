@@ -1,10 +1,24 @@
-VELAS-04: Fix optimizer and robustness bugs
+VELAS-05: Filters & Presets
 
-Исправлено:
-- optimizer.py:374 - AttributeError when best_result is None
-  Было: f-string с прямым доступом к composite_score
-  Стало: предварительная проверка и сохранение в переменную
+Добавлен анализатор волатильности и система управления пресетами.
 
-- robustness.py:313 - ValueError: index должен быть 0-59
-  Было: index=99 для кастомных пресетов
-  Стало: использует индекс базового пресета для валидации
+Новые файлы:
+- backend/core/volatility.py - ATR-based volatility analyzer
+- backend/core/presets.py - Preset manager & generator
+- backend/core/__init__.py - Module exports
+- scripts/generate_presets.py - CLI preset generator
+- tests/test_volatility.py - Volatility tests
+- tests/test_presets.py - Preset tests
+- run_tests.bat - Windows test runner
+- run_tests.sh - Unix test runner
+
+Функционал:
+- VolatilityRegime (LOW/NORMAL/HIGH) на основе ATR Ratio
+- Автоматическое определение режима волатильности
+- Множители TP/SL для каждого режима
+- TradingPreset dataclass с полной конфигурацией
+- PresetManager для YAML загрузки/сохранения
+- PresetGenerator для генерации 180 пресетов (20×3×3)
+- CLI скрипт с опциями --symbol, --dry-run, --summary
+
+180 пресетов = 20 пар × 3 таймфрейма × 3 режима волатильности

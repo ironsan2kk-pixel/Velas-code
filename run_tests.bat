@@ -1,46 +1,42 @@
 @echo off
 cd /d "%~dp0"
-chcp 65001 >nul
-title VELAS-04 Tests
 
-echo ========================================
-echo  VELAS-04 Optimizer Tests
-echo ========================================
+echo ============================================
+echo   VELAS Tests Runner - Windows
+echo ============================================
 echo.
 
-:: Check Python
-python --version >nul 2>&1
-if errorlevel 1 (
-    echo [ERROR] Python not found!
-    pause
-    exit /b 1
-)
-
-:: Create venv if not exists
+REM Создаём виртуальное окружение если нет
 if not exist "venv" (
-    echo [INFO] Creating virtual environment...
+    echo Создание виртуального окружения...
     python -m venv venv
 )
 
-:: Activate venv
+REM Активируем venv
 call venv\Scripts\activate.bat
 
-:: Install dependencies
-echo [INFO] Installing dependencies...
-pip install --quiet --upgrade pip
-pip install --quiet -r requirements.txt
+REM Устанавливаем зависимости
+echo Установка зависимостей...
+pip install -q pytest pandas numpy pyyaml
 
-:: Run tests
+REM Запускаем тесты
 echo.
-echo [INFO] Running tests...
-echo ========================================
+echo Запуск тестов...
+echo ============================================
 python -m pytest tests/ -v --tb=short
-pause
-:: Deactivate
-deactivate
-pause
+
+REM Код возврата
+set EXITCODE=%ERRORLEVEL%
+
 echo.
-echo ========================================
-echo  Tests Complete!
-echo ========================================
+echo ============================================
+if %EXITCODE% == 0 (
+    echo   ✅ Все тесты прошли успешно!
+) else (
+    echo   ❌ Некоторые тесты не прошли
+)
+echo ============================================
 pause
+deactivate
+
+exit /b %EXITCODE%
