@@ -1,3 +1,7 @@
-export { Header } from './Header';
+/**
+ * VELAS - Layout Components Index
+ */
+
+export { MainLayout } from './MainLayout';
 export { Sidebar } from './Sidebar';
-export { BottomNav } from './BottomNav';
+export { Header } from './Header';

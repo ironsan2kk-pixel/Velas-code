@@ -1,16 +1,43 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import * as api from '@/services/api';
+/**
+ * VELAS Trading System - API Hooks
+ * React Query hooks для всех API endpoints
+ */
+
+import { useQuery, useMutation, useQueryClient, UseQueryOptions, UseMutationOptions } from '@tanstack/react-query';
+import { get, post, put, buildQueryString } from '@/api/client';
 import type {
+  ApiResponse,
+  PaginatedResponse,
+  DashboardSummary,
+  DashboardMetrics,
+  EquityPoint,
   Position,
+  PositionDetail,
+  Trade,
+  HistoryStats,
   Signal,
-  TradeHistory,
   Pair,
   PairDetail,
+  OHLCV,
+  EquityCurveData,
+  DrawdownData,
+  MonthlyStats,
+  PairAnalytics,
+  CorrelationData,
   BacktestConfig,
-  AllSettings,
+  BacktestResult,
+  BacktestListItem,
+  SystemSettings,
+  Preset,
+  AlertSettings,
+  Alert,
+  SystemStatus,
+  LogEntry,
 } from '@/types';
 
-// ===== Query Keys =====
+// ============================================================================
+// QUERY KEYS
+// ============================================================================
 
 export const queryKeys = {
   // Dashboard
@@ -19,299 +46,440 @@ export const queryKeys = {
   dashboardChart: (period: string) => ['dashboard', 'chart', period] as const,
   
   // Positions
-  positions: (status?: string) => ['positions', { status }] as const,
-  position: (id: number) => ['positions', id] as const,
-  positionsSummary: ['positions', 'summary'] as const,
+  positions: (status?: string) => ['positions', status] as const,
+  position: (id: string) => ['position', id] as const,
   
   // History
-  history: (page: number, pageSize: number, symbol?: string, side?: string) =>
-    ['history', { page, pageSize, symbol, side }] as const,
-  historyStats: (period?: string) => ['history', 'stats', period] as const,
+  history: (page: number, pageSize: number, filters?: any) => ['history', page, pageSize, filters] as const,
+  historyStats: ['history', 'stats'] as const,
   
   // Signals
-  signals: (page: number, pageSize: number, status?: string) =>
-    ['signals', { page, pageSize, status }] as const,
-  pendingSignals: ['signals', 'pending'] as const,
-  signal: (id: number) => ['signals', id] as const,
+  signals: (page: number, pageSize: number, filters?: any) => ['signals', page, pageSize, filters] as const,
+  signalsPending: ['signals', 'pending'] as const,
+  signal: (id: string) => ['signal', id] as const,
   
   // Pairs
   pairs: ['pairs'] as const,
-  pair: (symbol: string) => ['pairs', symbol] as const,
-  pairChart: (symbol: string, timeframe: string) => ['pairs', symbol, 'chart', timeframe] as const,
-  pairSignals: (symbol: string) => ['pairs', symbol, 'signals'] as const,
+  pair: (symbol: string) => ['pair', symbol] as const,
+  pairChart: (symbol: string, timeframe: string, period: string) => ['pair', symbol, 'chart', timeframe, period] as const,
+  pairSignals: (symbol: string) => ['pair', symbol, 'signals'] as const,
   
   // Analytics
-  equityCurve: (period: string) => ['analytics', 'equity', period] as const,
-  drawdown: (period: string) => ['analytics', 'drawdown', period] as const,
-  monthlyStats: ['analytics', 'monthly'] as const,
-  pairAnalytics: ['analytics', 'pairs'] as const,
-  correlationMatrix: ['analytics', 'correlation'] as const,
+  analyticsEquity: (period?: string) => ['analytics', 'equity', period] as const,
+  analyticsDrawdown: (period?: string) => ['analytics', 'drawdown', period] as const,
+  analyticsMonthly: ['analytics', 'monthly'] as const,
+  analyticsPairs: ['analytics', 'pairs'] as const,
+  analyticsCorrelation: ['analytics', 'correlation'] as const,
   
   // Backtest
   backtestResults: ['backtest', 'results'] as const,
-  backtestResult: (id: string) => ['backtest', 'results', id] as const,
+  backtestResult: (id: string) => ['backtest', 'result', id] as const,
   backtestStatus: (id: string) => ['backtest', 'status', id] as const,
   
   // Settings
   settings: ['settings'] as const,
   presets: ['settings', 'presets'] as const,
-  preset: (id: string) => ['settings', 'presets', id] as const,
+  preset: (id: string) => ['settings', 'preset', id] as const,
+  
+  // Alerts
+  alertSettings: ['alerts', 'settings'] as const,
+  alertHistory: (page: number, pageSize: number) => ['alerts', 'history', page, pageSize] as const,
   
   // System
   systemStatus: ['system', 'status'] as const,
-  systemLogs: (level?: string, component?: string) =>
-    ['system', 'logs', { level, component }] as const,
+  systemLogs: (limit?: number, level?: string) => ['system', 'logs', limit, level] as const,
 };
 
-// ===== Dashboard Hooks =====
+// ============================================================================
+// DASHBOARD
+// ============================================================================
 
-export function useDashboardSummary() {
-  return useQuery({
+export const useDashboardSummary = (options?: UseQueryOptions<DashboardSummary>) => {
+  return useQuery<DashboardSummary>({
     queryKey: queryKeys.dashboardSummary,
-    queryFn: api.getDashboardSummary,
-    refetchInterval: 5000, // Refresh every 5 seconds
+    queryFn: () => get('/dashboard/summary'),
+    refetchInterval: 5000, // обновляем каждые 5 секунд
+    ...options,
   });
-}
+};
 
-export function useDashboardMetrics() {
-  return useQuery({
+export const useDashboardMetrics = (options?: UseQueryOptions<DashboardMetrics>) => {
+  return useQuery<DashboardMetrics>({
     queryKey: queryKeys.dashboardMetrics,
-    queryFn: api.getDashboardMetrics,
-    refetchInterval: 30000, // Refresh every 30 seconds
+    queryFn: () => get('/dashboard/metrics'),
+    refetchInterval: 10000,
+    ...options,
   });
-}
+};
 
-export function useDashboardChart(period: '1d' | '1w' | '1m' | '3m' = '1w') {
-  return useQuery({
+export const useDashboardChart = (period: string = '1w', options?: UseQueryOptions<EquityPoint[]>) => {
+  return useQuery<EquityPoint[]>({
     queryKey: queryKeys.dashboardChart(period),
-    queryFn: () => api.getDashboardChart(period),
+    queryFn: () => get(`/dashboard/chart${buildQueryString({ period })}`),
+    refetchInterval: 30000,
+    ...options,
   });
-}
+};
 
-// ===== Position Hooks =====
+// ============================================================================
+// POSITIONS
+// ============================================================================
 
-export function usePositions(status?: 'open' | 'closed') {
-  return useQuery({
+export const usePositions = (status?: 'open' | 'closed', options?: UseQueryOptions<Position[]>) => {
+  return useQuery<Position[]>({
     queryKey: queryKeys.positions(status),
-    queryFn: () => api.getPositions(status),
-    refetchInterval: 5000,
+    queryFn: () => get(`/positions${buildQueryString({ status })}`),
+    refetchInterval: 3000,
+    ...options,
   });
-}
+};
 
-export function usePosition(id: number) {
-  return useQuery({
+export const usePosition = (id: string, options?: UseQueryOptions<PositionDetail>) => {
+  return useQuery<PositionDetail>({
     queryKey: queryKeys.position(id),
-    queryFn: () => api.getPosition(id),
-    enabled: id > 0,
+    queryFn: () => get(`/positions/${id}`),
+    enabled: !!id,
+    refetchInterval: 5000,
+    ...options,
   });
-}
+};
 
-export function useClosePosition() {
+export const useClosePosition = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (id: number) => api.closePosition(id),
+    mutationFn: (id: string) => post(`/positions/${id}/close`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['positions'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.positions() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboardSummary });
     },
   });
-}
+};
 
-// ===== History Hooks =====
+// ============================================================================
+// HISTORY
+// ============================================================================
 
-export function useHistory(
+export const useHistory = (
   page: number = 1,
   pageSize: number = 20,
-  symbol?: string,
-  side?: 'LONG' | 'SHORT'
-) {
-  return useQuery({
-    queryKey: queryKeys.history(page, pageSize, symbol, side),
-    queryFn: () => api.getHistory(page, pageSize, symbol, side),
+  filters?: any,
+  options?: UseQueryOptions<PaginatedResponse<Trade>>
+) => {
+  return useQuery<PaginatedResponse<Trade>>({
+    queryKey: queryKeys.history(page, pageSize, filters),
+    queryFn: () => get(`/history${buildQueryString({ page, page_size: pageSize, ...filters })}`),
+    ...options,
   });
-}
+};
 
-export function useHistoryStats(period?: '7d' | '30d' | '90d' | 'all') {
-  return useQuery({
-    queryKey: queryKeys.historyStats(period),
-    queryFn: () => api.getHistoryStats(period),
+export const useHistoryStats = (options?: UseQueryOptions<HistoryStats>) => {
+  return useQuery<HistoryStats>({
+    queryKey: queryKeys.historyStats,
+    queryFn: () => get('/history/stats'),
+    ...options,
   });
-}
+};
 
-// ===== Signal Hooks =====
-
-export function useSignals(page: number = 1, pageSize: number = 20, status?: string) {
-  return useQuery({
-    queryKey: queryKeys.signals(page, pageSize, status),
-    queryFn: () => api.getSignals(page, pageSize, status),
+export const useExportHistory = () => {
+  return useMutation({
+    mutationFn: (filters?: any) => get(`/history/export${buildQueryString(filters || {})}`, { responseType: 'blob' }),
   });
-}
+};
 
-export function usePendingSignals() {
-  return useQuery({
-    queryKey: queryKeys.pendingSignals,
-    queryFn: api.getPendingSignals,
+// ============================================================================
+// SIGNALS
+// ============================================================================
+
+export const useSignals = (
+  page: number = 1,
+  pageSize: number = 20,
+  filters?: any,
+  options?: UseQueryOptions<PaginatedResponse<Signal>>
+) => {
+  return useQuery<PaginatedResponse<Signal>>({
+    queryKey: queryKeys.signals(page, pageSize, filters),
+    queryFn: () => get(`/signals${buildQueryString({ page, page_size: pageSize, ...filters })}`),
     refetchInterval: 5000,
+    ...options,
   });
-}
+};
 
-// ===== Pair Hooks =====
+export const usePendingSignals = (options?: UseQueryOptions<Signal[]>) => {
+  return useQuery<Signal[]>({
+    queryKey: queryKeys.signalsPending,
+    queryFn: () => get('/signals/pending'),
+    refetchInterval: 3000,
+    ...options,
+  });
+};
 
-export function usePairs() {
-  return useQuery({
+export const useSignal = (id: string, options?: UseQueryOptions<Signal>) => {
+  return useQuery<Signal>({
+    queryKey: queryKeys.signal(id),
+    queryFn: () => get(`/signals/${id}`),
+    enabled: !!id,
+    ...options,
+  });
+};
+
+// ============================================================================
+// PAIRS
+// ============================================================================
+
+export const usePairs = (options?: UseQueryOptions<Pair[]>) => {
+  return useQuery<Pair[]>({
     queryKey: queryKeys.pairs,
-    queryFn: api.getPairs,
+    queryFn: () => get('/pairs'),
     refetchInterval: 10000,
+    ...options,
   });
-}
+};
 
-export function usePair(symbol: string) {
-  return useQuery({
+export const usePair = (symbol: string, options?: UseQueryOptions<PairDetail>) => {
+  return useQuery<PairDetail>({
     queryKey: queryKeys.pair(symbol),
-    queryFn: () => api.getPair(symbol),
+    queryFn: () => get(`/pairs/${symbol}`),
     enabled: !!symbol,
     refetchInterval: 5000,
+    ...options,
   });
-}
+};
 
-export function usePairChart(
+export const usePairChart = (
   symbol: string,
-  timeframe: '30m' | '1h' | '2h' | '4h' | '1d' = '1h'
-) {
-  return useQuery({
-    queryKey: queryKeys.pairChart(symbol, timeframe),
-    queryFn: () => api.getPairChart(symbol, timeframe),
+  timeframe: string = '1h',
+  period: string = '1w',
+  options?: UseQueryOptions<OHLCV[]>
+) => {
+  return useQuery<OHLCV[]>({
+    queryKey: queryKeys.pairChart(symbol, timeframe, period),
+    queryFn: () => get(`/pairs/${symbol}/chart${buildQueryString({ timeframe, period })}`),
     enabled: !!symbol,
-    refetchInterval: 30000,
+    refetchInterval: 10000,
+    ...options,
   });
-}
+};
 
-// ===== Analytics Hooks =====
-
-export function useEquityCurve(period: '1w' | '1m' | '3m' | '6m' | '1y' = '1m') {
-  return useQuery({
-    queryKey: queryKeys.equityCurve(period),
-    queryFn: () => api.getEquityCurve(period),
+export const usePairSignals = (symbol: string, options?: UseQueryOptions<Signal[]>) => {
+  return useQuery<Signal[]>({
+    queryKey: queryKeys.pairSignals(symbol),
+    queryFn: () => get(`/pairs/${symbol}/signals`),
+    enabled: !!symbol,
+    refetchInterval: 5000,
+    ...options,
   });
-}
+};
 
-export function useMonthlyStats() {
-  return useQuery({
-    queryKey: queryKeys.monthlyStats,
-    queryFn: api.getMonthlyStats,
+// ============================================================================
+// ANALYTICS
+// ============================================================================
+
+export const useAnalyticsEquity = (period?: string, options?: UseQueryOptions<EquityCurveData[]>) => {
+  return useQuery<EquityCurveData[]>({
+    queryKey: queryKeys.analyticsEquity(period),
+    queryFn: () => get(`/analytics/equity${buildQueryString({ period: period || 'all' })}`),
+    ...options,
   });
-}
+};
 
-export function usePairAnalytics() {
-  return useQuery({
-    queryKey: queryKeys.pairAnalytics,
-    queryFn: api.getPairAnalytics,
+export const useAnalyticsDrawdown = (period?: string, options?: UseQueryOptions<DrawdownData[]>) => {
+  return useQuery<DrawdownData[]>({
+    queryKey: queryKeys.analyticsDrawdown(period),
+    queryFn: () => get(`/analytics/drawdown${buildQueryString({ period: period || 'all' })}`),
+    ...options,
   });
-}
+};
 
-export function useCorrelationMatrix() {
-  return useQuery({
-    queryKey: queryKeys.correlationMatrix,
-    queryFn: api.getCorrelationMatrix,
+export const useAnalyticsMonthly = (options?: UseQueryOptions<MonthlyStats[]>) => {
+  return useQuery<MonthlyStats[]>({
+    queryKey: queryKeys.analyticsMonthly,
+    queryFn: () => get('/analytics/monthly'),
+    ...options,
   });
-}
+};
 
-// ===== Backtest Hooks =====
+export const useAnalyticsPairs = (options?: UseQueryOptions<PairAnalytics[]>) => {
+  return useQuery<PairAnalytics[]>({
+    queryKey: queryKeys.analyticsPairs,
+    queryFn: () => get('/analytics/pairs'),
+    ...options,
+  });
+};
 
-export function useRunBacktest() {
+export const useAnalyticsCorrelation = (options?: UseQueryOptions<CorrelationData>) => {
+  return useQuery<CorrelationData>({
+    queryKey: queryKeys.analyticsCorrelation,
+    queryFn: () => get('/analytics/correlation'),
+    ...options,
+  });
+};
+
+// ============================================================================
+// BACKTEST
+// ============================================================================
+
+export const useBacktestResults = (options?: UseQueryOptions<BacktestListItem[]>) => {
+  return useQuery<BacktestListItem[]>({
+    queryKey: queryKeys.backtestResults,
+    queryFn: () => get('/backtest/results'),
+    ...options,
+  });
+};
+
+export const useBacktestResult = (id: string, options?: UseQueryOptions<BacktestResult>) => {
+  return useQuery<BacktestResult>({
+    queryKey: queryKeys.backtestResult(id),
+    queryFn: () => get(`/backtest/results/${id}`),
+    enabled: !!id,
+    ...options,
+  });
+};
+
+export const useBacktestStatus = (id: string, options?: UseQueryOptions<BacktestResult>) => {
+  return useQuery<BacktestResult>({
+    queryKey: queryKeys.backtestStatus(id),
+    queryFn: () => get(`/backtest/status/${id}`),
+    enabled: !!id,
+    refetchInterval: (data) => {
+      // Останавливаем polling если тест завершён
+      if (data?.status === 'completed' || data?.status === 'failed') {
+        return false;
+      }
+      return 2000; // каждые 2 секунды
+    },
+    ...options,
+  });
+};
+
+export const useRunBacktest = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (config: BacktestConfig) => api.runBacktest(config),
+    mutationFn: (config: BacktestConfig) => post('/backtest/run', config),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.backtestResults });
     },
   });
-}
+};
 
-export function useBacktestResults() {
-  return useQuery({
-    queryKey: queryKeys.backtestResults,
-    queryFn: api.getBacktestResults,
-  });
-}
+// ============================================================================
+// SETTINGS
+// ============================================================================
 
-export function useBacktestStatus(id: string) {
-  return useQuery({
-    queryKey: queryKeys.backtestStatus(id),
-    queryFn: () => api.getBacktestStatus(id),
-    enabled: !!id,
-    refetchInterval: (query) => {
-      const data = query.state.data;
-      return data?.status === 'running' ? 2000 : false;
-    },
-  });
-}
-
-// ===== Settings Hooks =====
-
-export function useSettings() {
-  return useQuery({
+export const useSettings = (options?: UseQueryOptions<SystemSettings>) => {
+  return useQuery<SystemSettings>({
     queryKey: queryKeys.settings,
-    queryFn: api.getSettings,
+    queryFn: () => get('/settings'),
+    ...options,
   });
-}
+};
 
-export function useUpdateSettings() {
+export const useUpdateSettings = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (settings: Partial<AllSettings>) => api.updateSettings(settings),
+    mutationFn: (settings: Partial<SystemSettings>) => put('/settings', settings),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.settings });
     },
   });
-}
+};
 
-export function usePresets() {
-  return useQuery({
+export const usePresets = (options?: UseQueryOptions<Preset[]>) => {
+  return useQuery<Preset[]>({
     queryKey: queryKeys.presets,
-    queryFn: api.getPresets,
+    queryFn: () => get('/settings/presets'),
+    ...options,
   });
-}
+};
 
-// ===== System Hooks =====
+export const useUpdatePreset = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<Preset> }) => put(`/settings/presets/${id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.presets });
+    },
+  });
+};
 
-export function useSystemStatus() {
-  return useQuery({
-    queryKey: queryKeys.systemStatus,
-    queryFn: api.getSystemStatus,
+// ============================================================================
+// ALERTS
+// ============================================================================
+
+export const useAlertSettings = (options?: UseQueryOptions<AlertSettings>) => {
+  return useQuery<AlertSettings>({
+    queryKey: queryKeys.alertSettings,
+    queryFn: () => get('/alerts/settings'),
+    ...options,
+  });
+};
+
+export const useUpdateAlertSettings = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (settings: Partial<AlertSettings>) => put('/alerts/settings', settings),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.alertSettings });
+    },
+  });
+};
+
+export const useAlertHistory = (
+  page: number = 1,
+  pageSize: number = 20,
+  options?: UseQueryOptions<PaginatedResponse<Alert>>
+) => {
+  return useQuery<PaginatedResponse<Alert>>({
+    queryKey: queryKeys.alertHistory(page, pageSize),
+    queryFn: () => get(`/alerts/history${buildQueryString({ page, page_size: pageSize })}`),
     refetchInterval: 10000,
+    ...options,
   });
-}
+};
 
-export function useSystemLogs(level?: string, component?: string, limit: number = 100) {
-  return useQuery({
-    queryKey: queryKeys.systemLogs(level, component),
-    queryFn: () => api.getSystemLogs(level, component, limit),
+// ============================================================================
+// SYSTEM
+// ============================================================================
+
+export const useSystemStatus = (options?: UseQueryOptions<SystemStatus>) => {
+  return useQuery<SystemStatus>({
+    queryKey: queryKeys.systemStatus,
+    queryFn: () => get('/system/status'),
     refetchInterval: 5000,
+    ...options,
   });
-}
+};
 
-export function usePauseTrading() {
+export const useSystemLogs = (
+  limit: number = 100,
+  level?: string,
+  options?: UseQueryOptions<LogEntry[]>
+) => {
+  return useQuery<LogEntry[]>({
+    queryKey: queryKeys.systemLogs(limit, level),
+    queryFn: () => get(`/system/logs${buildQueryString({ limit, level })}`),
+    refetchInterval: 10000,
+    ...options,
+  });
+};
+
+export const useDownloadLogs = () => {
+  return useMutation({
+    mutationFn: () => get('/system/logs/download', { responseType: 'blob' }),
+  });
+};
+
+export const useRestartComponent = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: api.pauseTrading,
+    mutationFn: (component: string) => post(`/system/restart`, { component }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.systemStatus });
     },
   });
-}
-
-export function useResumeTrading() {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: api.resumeTrading,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.systemStatus });
-    },
-  });
-}
+};

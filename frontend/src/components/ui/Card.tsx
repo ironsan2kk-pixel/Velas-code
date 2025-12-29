@@ -1,97 +1,20 @@
+/**
+ * VELAS UI - Card Component
+ */
+
 import React from 'react';
-import { cn } from '@/utils';
+import { cn } from '@/utils/cn';
 
-export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
-  hoverable?: boolean;
-  noPadding?: boolean;
+interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
+  children: React.ReactNode;
+  className?: string;
 }
 
-export const Card = React.forwardRef<HTMLDivElement, CardProps>(
-  ({ className, hoverable = false, noPadding = false, children, ...props }, ref) => {
-    return (
-      <div
-        ref={ref}
-        className={cn(
-          'card',
-          hoverable && 'card-hover cursor-pointer',
-          noPadding && 'p-0',
-          className
-        )}
-        {...props}
-      >
-        {children}
-      </div>
-    );
-  }
-);
-
-Card.displayName = 'Card';
-
-// Card Header
-export interface CardHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
-  title: string;
-  subtitle?: string;
-  action?: React.ReactNode;
-}
-
-export const CardHeader: React.FC<CardHeaderProps> = ({
-  title,
-  subtitle,
-  action,
-  className,
-  ...props
-}) => {
-  return (
-    <div
-      className={cn('flex items-center justify-between mb-4', className)}
-      {...props}
-    >
-      <div>
-        <h3 className="text-lg font-semibold text-dark-text-primary dark:text-dark-text-primary">
-          {title}
-        </h3>
-        {subtitle && (
-          <p className="text-sm text-dark-text-secondary dark:text-dark-text-secondary mt-0.5">
-            {subtitle}
-          </p>
-        )}
-      </div>
-      {action && <div>{action}</div>}
-    </div>
-  );
-};
-
-CardHeader.displayName = 'CardHeader';
-
-// Card Content
-export interface CardContentProps extends React.HTMLAttributes<HTMLDivElement> {}
-
-export const CardContent: React.FC<CardContentProps> = ({
-  className,
-  children,
-  ...props
-}) => {
-  return (
-    <div className={cn(className)} {...props}>
-      {children}
-    </div>
-  );
-};
-
-CardContent.displayName = 'CardContent';
-
-// Card Footer
-export interface CardFooterProps extends React.HTMLAttributes<HTMLDivElement> {}
-
-export const CardFooter: React.FC<CardFooterProps> = ({
-  className,
-  children,
-  ...props
-}) => {
+export const Card: React.FC<CardProps> = ({ children, className, ...props }) => {
   return (
     <div
       className={cn(
-        'mt-4 pt-4 border-t border-dark-border dark:border-dark-border',
+        'bg-dark-bg-card border border-dark-border rounded-lg shadow-sm',
         className
       )}
       {...props}
@@ -101,6 +24,51 @@ export const CardFooter: React.FC<CardFooterProps> = ({
   );
 };
 
-CardFooter.displayName = 'CardFooter';
+interface CardHeaderProps {
+  title: string;
+  subtitle?: string;
+  action?: React.ReactNode;
+  className?: string;
+}
 
-export default Card;
+export const CardHeader: React.FC<CardHeaderProps> = ({ title, subtitle, action, className }) => {
+  return (
+    <div className={cn('px-6 py-4 border-b border-dark-border', className)}>
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-semibold text-dark-text-primary">{title}</h3>
+          {subtitle && (
+            <p className="text-sm text-dark-text-secondary mt-0.5">{subtitle}</p>
+          )}
+        </div>
+        {action && <div className="flex items-center gap-2">{action}</div>}
+      </div>
+    </div>
+  );
+};
+
+interface CardContentProps extends React.HTMLAttributes<HTMLDivElement> {
+  children: React.ReactNode;
+  className?: string;
+}
+
+export const CardContent: React.FC<CardContentProps> = ({ children, className, ...props }) => {
+  return (
+    <div className={cn('px-6 py-4', className)} {...props}>
+      {children}
+    </div>
+  );
+};
+
+interface CardFooterProps extends React.HTMLAttributes<HTMLDivElement> {
+  children: React.ReactNode;
+  className?: string;
+}
+
+export const CardFooter: React.FC<CardFooterProps> = ({ children, className, ...props }) => {
+  return (
+    <div className={cn('px-6 py-4 border-t border-dark-border bg-dark-bg-secondary/30', className)} {...props}>
+      {children}
+    </div>
+  );
+};

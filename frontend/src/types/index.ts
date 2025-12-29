@@ -1,85 +1,203 @@
-// ===== Trading Types =====
+/**
+ * VELAS Trading System - TypeScript Types
+ * Все типы данных для frontend
+ */
 
-export type Side = 'LONG' | 'SHORT';
-export type PositionStatus = 'open' | 'closed' | 'partial';
-export type SignalStatus = 'pending' | 'active' | 'filled' | 'cancelled' | 'expired';
-export type SystemStatus = 'online' | 'offline' | 'degraded' | 'maintenance';
-export type VolatilityRegime = 'low' | 'normal' | 'high';
-export type Timeframe = '30m' | '1h' | '2h';
+// ============================================================================
+// ENUMS
+// ============================================================================
 
-// ===== Position Types =====
-
-export interface Position {
-  id: number;
-  symbol: string;
-  side: Side;
-  timeframe: Timeframe;
-  preset_id: string;
-  entry_price: number;
-  entry_time: string;
-  quantity: number;
-  current_sl: number;
-  status: PositionStatus;
-  tp1_hit: boolean;
-  tp2_hit: boolean;
-  tp3_hit: boolean;
-  tp4_hit: boolean;
-  tp5_hit: boolean;
-  tp6_hit: boolean;
-  close_price?: number;
-  close_time?: string;
-  close_reason?: string;
-  realized_pnl?: number;
-  unrealized_pnl?: number;
-  unrealized_pnl_percent?: number;
-  created_at: string;
+export enum Side {
+  LONG = 'LONG',
+  SHORT = 'SHORT',
 }
 
-export interface PositionSummary {
-  total_positions: number;
+export enum Timeframe {
+  M30 = '30m',
+  H1 = '1h',
+  H2 = '2h',
+}
+
+export enum VolatilityRegime {
+  LOW = 'LOW',
+  NORMAL = 'NORMAL',
+  HIGH = 'HIGH',
+}
+
+export enum SignalStatus {
+  PENDING = 'pending',
+  ACTIVE = 'active',
+  FILLED = 'filled',
+  CANCELLED = 'cancelled',
+  EXPIRED = 'expired',
+}
+
+export enum PositionStatus {
+  OPEN = 'open',
+  CLOSED = 'closed',
+}
+
+export enum BacktestStatus {
+  PENDING = 'pending',
+  RUNNING = 'running',
+  COMPLETED = 'completed',
+  FAILED = 'failed',
+}
+
+export enum SystemComponent {
+  LIVE_ENGINE = 'live_engine',
+  DATA_ENGINE = 'data_engine',
+  TELEGRAM_BOT = 'telegram_bot',
+  DATABASE = 'database',
+}
+
+export enum ComponentStatus {
+  ONLINE = 'online',
+  OFFLINE = 'offline',
+  ERROR = 'error',
+}
+
+export enum AlertType {
+  INFO = 'info',
+  SUCCESS = 'success',
+  WARNING = 'warning',
+  ERROR = 'error',
+}
+
+export enum AlertCategory {
+  TRADING = 'trading',
+  SYSTEM = 'system',
+  PORTFOLIO = 'portfolio',
+  PERFORMANCE = 'performance',
+}
+
+// ============================================================================
+// API RESPONSES
+// ============================================================================
+
+export interface ApiResponse<T = any> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  timestamp: string;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+}
+
+// ============================================================================
+// DASHBOARD
+// ============================================================================
+
+export interface DashboardSummary {
+  status: 'live' | 'offline' | 'paused';
   total_pnl: number;
   total_pnl_percent: number;
-  winning_positions: number;
-  losing_positions: number;
+  open_positions: number;
+  total_trades: number;
+  win_rate: number;
+  portfolio_value: number;
+  available_balance: number;
+  portfolio_heat: number;
+  today_signals: number;
+  last_signal_time?: string;
 }
 
-// ===== Signal Types =====
+export interface DashboardMetrics {
+  profit_factor: number;
+  sharpe_ratio: number;
+  max_drawdown: number;
+  win_streak: number;
+  loss_streak: number;
+  best_pair: string;
+  worst_pair: string;
+  avg_win: number;
+  avg_loss: number;
+  expectancy: number;
+}
 
-export interface Signal {
-  id: number;
+export interface EquityPoint {
+  timestamp: string;
+  equity: number;
+  drawdown: number;
+  pnl: number;
+}
+
+// ============================================================================
+// POSITIONS
+// ============================================================================
+
+export interface TpLevel {
+  level: number;
+  price: number;
+  percent: number;
+  quantity_percent: number;
+  hit: boolean;
+  hit_time?: string;
+}
+
+export interface Position {
+  id: string;
   symbol: string;
   side: Side;
   timeframe: Timeframe;
   entry_price: number;
-  sl_price: number;
-  tp1_price: number;
-  tp2_price: number;
-  tp3_price: number;
-  tp4_price: number;
-  tp5_price: number;
-  tp6_price: number;
-  status: SignalStatus;
-  preset_id: string;
+  quantity: number;
+  current_price: number;
+  unrealized_pnl: number;
+  unrealized_pnl_percent: number;
+  stop_loss: number;
+  tp_levels: TpLevel[];
+  entry_time: string;
+  duration_hours: number;
   volatility_regime: VolatilityRegime;
-  telegram_sent: boolean;
-  created_at: string;
+  preset_id: string;
+  status: PositionStatus;
 }
 
-// ===== Trade History Types =====
+export interface PositionDetail extends Position {
+  signals_history: Signal[];
+  price_history: PricePoint[];
+  trades: Trade[];
+  risk_reward_ratio: number;
+  max_profit_reached: number;
+  max_drawdown_reached: number;
+}
 
-export interface TradeHistory {
-  id: number;
-  position_id: number;
+export interface PricePoint {
+  timestamp: string;
+  price: number;
+  ma?: number;
+}
+
+// ============================================================================
+// HISTORY
+// ============================================================================
+
+export interface Trade {
+  id: string;
   symbol: string;
   side: Side;
   timeframe: Timeframe;
   entry_price: number;
   exit_price: number;
+  quantity: number;
+  pnl: number;
   pnl_percent: number;
-  pnl_usd: number;
-  exit_reason: string;
-  duration_minutes: number;
-  created_at: string;
+  entry_time: string;
+  exit_time: string;
+  duration_hours: number;
+  exit_reason: 'tp1' | 'tp2' | 'tp3' | 'tp4' | 'tp5' | 'tp6' | 'sl' | 'manual';
+  tp_hits: number[];
+  volatility_regime: VolatilityRegime;
+  preset_id: string;
+  fees: number;
+  win: boolean;
 }
 
 export interface HistoryStats {
@@ -88,14 +206,45 @@ export interface HistoryStats {
   losing_trades: number;
   win_rate: number;
   total_pnl: number;
-  avg_pnl: number;
-  max_win: number;
-  max_loss: number;
+  total_pnl_percent: number;
+  avg_win: number;
+  avg_loss: number;
   profit_factor: number;
-  avg_duration_minutes: number;
+  sharpe_ratio: number;
+  max_drawdown: number;
+  best_trade: number;
+  worst_trade: number;
+  avg_duration_hours: number;
 }
 
-// ===== Pair Types =====
+// ============================================================================
+// SIGNALS
+// ============================================================================
+
+export interface Signal {
+  id: string;
+  symbol: string;
+  side: Side;
+  timeframe: Timeframe;
+  entry_price: number;
+  stop_loss: number;
+  tp_levels: number[];
+  tp_distribution: number[];
+  confidence: number;
+  created_at: string;
+  expires_at: string;
+  status: SignalStatus;
+  filled_at?: string;
+  cancelled_reason?: string;
+  volatility_regime: VolatilityRegime;
+  preset_id: string;
+  velas_score: number;
+  telegram_sent: boolean;
+}
+
+// ============================================================================
+// PAIRS
+// ============================================================================
 
 export interface Pair {
   symbol: string;
@@ -108,73 +257,111 @@ export interface Pair {
   high_24h: number;
   low_24h: number;
   volatility_regime: VolatilityRegime;
-  active_position?: Position;
-  last_signal?: Signal;
+  atr_ratio: number;
+  active_position?: Side;
+  signals_today: number;
+  total_trades: number;
+  win_rate: number;
+  pnl_percent: number;
+  last_signal_time?: string;
 }
 
 export interface PairDetail extends Pair {
-  signals_count_24h: number;
-  trades_count_24h: number;
-  win_rate_30d: number;
-  total_pnl_30d: number;
+  timeframes: PairTimeframeData[];
+  recent_signals: Signal[];
+  performance_stats: PairPerformanceStats;
+  correlation_group: string;
 }
 
-// ===== Analytics Types =====
-
-export interface EquityPoint {
-  timestamp: string;
-  equity: number;
-  drawdown: number;
-}
-
-export interface MonthlyStats {
-  month: string;
-  trades: number;
+export interface PairTimeframeData {
+  timeframe: Timeframe;
+  volatility_regime: VolatilityRegime;
+  atr_ratio: number;
+  signals_count: number;
   win_rate: number;
-  pnl: number;
   pnl_percent: number;
+  active_preset_id: string;
 }
 
-export interface PairStats {
-  symbol: string;
-  trades: number;
-  win_rate: number;
-  pnl: number;
-  avg_pnl: number;
-}
-
-export interface CorrelationMatrix {
-  symbols: string[];
-  matrix: number[][];
-}
-
-// ===== Dashboard Types =====
-
-export interface DashboardSummary {
-  system_status: SystemStatus;
-  total_balance: number;
-  total_pnl: number;
-  total_pnl_percent: number;
-  win_rate: number;
+export interface PairPerformanceStats {
   total_trades: number;
   winning_trades: number;
   losing_trades: number;
-  portfolio_heat: number;
-  max_heat: number;
-  open_positions_count: number;
-  pending_signals_count: number;
-}
-
-export interface DashboardMetrics {
-  sharpe_ratio: number;
+  win_rate: number;
+  total_pnl: number;
+  total_pnl_percent: number;
+  avg_win: number;
+  avg_loss: number;
   profit_factor: number;
+  sharpe_ratio: number;
   max_drawdown: number;
-  avg_trade_duration_minutes: number;
-  best_pair: string;
-  worst_pair: string;
+  best_trade: number;
+  worst_trade: number;
+  avg_duration_hours: number;
 }
 
-// ===== Backtest Types =====
+export interface OHLCV {
+  timestamp: string;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+}
+
+// ============================================================================
+// ANALYTICS
+// ============================================================================
+
+export interface EquityCurveData {
+  timestamp: string;
+  equity: number;
+  balance: number;
+  drawdown: number;
+}
+
+export interface DrawdownData {
+  timestamp: string;
+  drawdown: number;
+  equity: number;
+  peak_equity: number;
+}
+
+export interface MonthlyStats {
+  month: string; // "2024-12"
+  trades: number;
+  wins: number;
+  losses: number;
+  win_rate: number;
+  pnl: number;
+  pnl_percent: number;
+  sharpe_ratio: number;
+  max_drawdown: number;
+}
+
+export interface PairAnalytics {
+  symbol: string;
+  trades: number;
+  wins: number;
+  losses: number;
+  win_rate: number;
+  pnl: number;
+  pnl_percent: number;
+  profit_factor: number;
+  avg_win: number;
+  avg_loss: number;
+  sharpe_ratio: number;
+  max_drawdown: number;
+}
+
+export interface CorrelationData {
+  pairs: string[];
+  matrix: number[][];
+}
+
+// ============================================================================
+// BACKTEST
+// ============================================================================
 
 export interface BacktestConfig {
   symbol: string;
@@ -183,200 +370,258 @@ export interface BacktestConfig {
   end_date: string;
   initial_balance: number;
   risk_per_trade: number;
+  preset_id?: string;
+  volatility_regime?: VolatilityRegime;
+  parameters?: BacktestParameters;
 }
 
-export interface BacktestResult {
-  id: string;
-  config: BacktestConfig;
-  total_trades: number;
-  win_rate: number;
-  total_pnl: number;
-  sharpe_ratio: number;
-  profit_factor: number;
-  max_drawdown: number;
-  equity_curve: EquityPoint[];
-  trades: TradeHistory[];
-  status: 'pending' | 'running' | 'completed' | 'failed';
-  progress: number;
-  created_at: string;
-}
-
-// ===== Settings Types =====
-
-export interface TradingSettings {
-  mode: 'paper' | 'live';
-  risk_per_trade: number;
-  max_positions: number;
-  max_per_sector: number;
-  correlation_limit: number;
-  initial_balance: number;
-}
-
-export interface TelegramSettings {
-  enabled: boolean;
-  bot_token_masked: string;
-  chat_id: string;
-  signal_new: boolean;
-  tp_hit: boolean;
-  sl_hit: boolean;
-  system_errors: boolean;
-}
-
-export interface SystemSettings {
-  log_level: 'DEBUG' | 'INFO' | 'WARNING' | 'ERROR';
-  timezone: string;
-  data_dir: string;
-}
-
-export interface AllSettings {
-  trading: TradingSettings;
-  telegram: TelegramSettings;
-  system: SystemSettings;
-}
-
-// ===== System Types =====
-
-export interface ComponentStatus {
-  name: string;
-  status: SystemStatus;
-  last_heartbeat: string;
-  error?: string;
-}
-
-export interface SystemStatusResponse {
-  overall_status: SystemStatus;
-  components: ComponentStatus[];
-  uptime_seconds: number;
-  version: string;
-  last_update: string;
-}
-
-export interface LogEntry {
-  timestamp: string;
-  level: 'DEBUG' | 'INFO' | 'WARNING' | 'ERROR';
-  component: string;
-  message: string;
-}
-
-// ===== Preset Types =====
-
-export interface Preset {
-  id: string;
-  symbol: string;
-  timeframe: Timeframe;
-  volatility_regime: VolatilityRegime;
+export interface BacktestParameters {
   i1: number;
   i2: number;
   i3: number;
   i4: number;
   i5: number;
-  tp1: number;
-  tp2: number;
-  tp3: number;
-  tp4: number;
-  tp5: number;
-  tp6: number;
-  sl: number;
+  tp_levels: number[];
   tp_distribution: number[];
-  metrics: {
-    win_rate: number;
-    sharpe_ratio: number;
-    profit_factor: number;
-    max_drawdown: number;
-  };
+  sl_percent: number;
 }
 
-// ===== WebSocket Types =====
-
-export interface WSMessage {
-  type: string;
-  data: unknown;
-  timestamp: string;
-}
-
-export interface WSSignalNew {
-  type: 'signal_new';
-  data: Signal;
-}
-
-export interface WSPositionOpened {
-  type: 'position_opened';
-  data: Position;
-}
-
-export interface WSPositionUpdated {
-  type: 'position_updated';
-  data: Position;
-}
-
-export interface WSPositionClosed {
-  type: 'position_closed';
-  data: Position;
-}
-
-export interface WSTPHit {
-  type: 'tp_hit';
-  data: {
-    position_id: number;
-    tp_level: number;
-    price: number;
-  };
-}
-
-export interface WSSLHit {
-  type: 'sl_hit';
-  data: {
-    position_id: number;
-    price: number;
-    pnl: number;
-  };
-}
-
-export interface WSSystemStatus {
-  type: 'system_status';
-  data: SystemStatusResponse;
-}
-
-export type WSEvent =
-  | WSSignalNew
-  | WSPositionOpened
-  | WSPositionUpdated
-  | WSPositionClosed
-  | WSTPHit
-  | WSSLHit
-  | WSSystemStatus;
-
-// ===== API Response Types =====
-
-export interface ApiResponse<T> {
-  success: boolean;
-  data: T;
+export interface BacktestResult {
+  id: string;
+  config: BacktestConfig;
+  status: BacktestStatus;
+  created_at: string;
+  started_at?: string;
+  completed_at?: string;
   error?: string;
+  metrics?: BacktestMetrics;
+  trades?: Trade[];
+  equity_curve?: EquityPoint[];
 }
 
-export interface PaginatedResponse<T> {
-  items: T[];
-  total: number;
-  page: number;
-  page_size: number;
-  total_pages: number;
+export interface BacktestMetrics {
+  total_trades: number;
+  winning_trades: number;
+  losing_trades: number;
+  win_rate: number;
+  total_pnl: number;
+  total_pnl_percent: number;
+  profit_factor: number;
+  sharpe_ratio: number;
+  sortino_ratio: number;
+  max_drawdown: number;
+  max_drawdown_percent: number;
+  avg_win: number;
+  avg_loss: number;
+  best_trade: number;
+  worst_trade: number;
+  avg_duration_hours: number;
+  expectancy: number;
+  recovery_factor: number;
 }
 
-// ===== Chart Types =====
-
-export interface OHLCV {
-  time: number;
-  open: number;
-  high: number;
-  low: number;
-  close: number;
-  volume: number;
+export interface BacktestListItem {
+  id: string;
+  symbol: string;
+  timeframe: Timeframe;
+  start_date: string;
+  end_date: string;
+  status: BacktestStatus;
+  created_at: string;
+  total_trades?: number;
+  win_rate?: number;
+  pnl_percent?: number;
+  sharpe_ratio?: number;
 }
 
-export interface ChartMarker {
-  time: number;
-  position: 'aboveBar' | 'belowBar';
-  color: string;
-  shape: 'circle' | 'square' | 'arrowUp' | 'arrowDown';
-  text: string;
+// ============================================================================
+// SETTINGS
+// ============================================================================
+
+export interface SystemSettings {
+  trading: TradingSettings;
+  portfolio: PortfolioSettings;
+  telegram: TelegramSettings;
+  system: SystemSettings2;
+}
+
+export interface TradingSettings {
+  enabled: boolean;
+  max_open_positions: number;
+  risk_per_trade: number;
+  max_portfolio_heat: number;
+  allow_multiple_per_pair: boolean;
+  min_signal_confidence: number;
+  signal_expiry_hours: number;
+}
+
+export interface PortfolioSettings {
+  initial_balance: number;
+  max_correlation_exposure: number;
+  correlation_threshold: number;
+  max_drawdown_limit: number;
+  auto_pause_on_loss_streak: boolean;
+  loss_streak_threshold: number;
+}
+
+export interface TelegramSettings {
+  enabled: boolean;
+  bot_token: string;
+  chat_id: string;
+  send_signals: boolean;
+  send_position_updates: boolean;
+  send_alerts: boolean;
+}
+
+export interface SystemSettings2 {
+  log_level: 'DEBUG' | 'INFO' | 'WARNING' | 'ERROR';
+  data_update_interval: number;
+  websocket_reconnect_delay: number;
+  backup_enabled: boolean;
+  backup_interval_hours: number;
+}
+
+export interface Preset {
+  id: string;
+  name: string;
+  symbol: string;
+  timeframe: Timeframe;
+  volatility_regime: VolatilityRegime;
+  parameters: BacktestParameters;
+  metrics: PresetMetrics;
+  created_at: string;
+  updated_at: string;
+  active: boolean;
+}
+
+export interface PresetMetrics {
+  sharpe_ratio: number;
+  win_rate: number;
+  profit_factor: number;
+  max_drawdown: number;
+  total_trades: number;
+  robustness_score: number;
+}
+
+// ============================================================================
+// ALERTS
+// ============================================================================
+
+export interface Alert {
+  id: string;
+  type: AlertType;
+  category: AlertCategory;
+  title: string;
+  message: string;
+  data?: any;
+  created_at: string;
+  read: boolean;
+  acknowledged: boolean;
+}
+
+export interface AlertSettings {
+  enabled: boolean;
+  telegram_enabled: boolean;
+  desktop_enabled: boolean;
+  sound_enabled: boolean;
+  trading_alerts: {
+    new_signal: boolean;
+    position_opened: boolean;
+    tp_hit: boolean;
+    sl_hit: boolean;
+    position_closed: boolean;
+  };
+  portfolio_alerts: {
+    max_positions_reached: boolean;
+    high_correlation_warning: boolean;
+    portfolio_heat_limit: boolean;
+    drawdown_limit: boolean;
+  };
+  system_alerts: {
+    component_offline: boolean;
+    api_error: boolean;
+    data_error: boolean;
+    backtest_completed: boolean;
+  };
+  performance_alerts: {
+    loss_streak: boolean;
+    low_win_rate: boolean;
+    high_drawdown: boolean;
+  };
+  loss_streak_threshold: number;
+  win_rate_threshold: number;
+  drawdown_threshold: number;
+}
+
+// ============================================================================
+// SYSTEM
+// ============================================================================
+
+export interface SystemStatus {
+  components: ComponentStatusMap;
+  uptime_seconds: number;
+  memory_usage_mb: number;
+  cpu_usage_percent: number;
+  disk_usage_percent: number;
+  database_size_mb: number;
+  last_update: string;
+}
+
+export interface ComponentStatusMap {
+  [key: string]: ComponentStatusDetail;
+}
+
+export interface ComponentStatusDetail {
+  status: ComponentStatus;
+  uptime_seconds?: number;
+  last_error?: string;
+  last_error_time?: string;
+  message?: string;
+}
+
+export interface LogEntry {
+  timestamp: string;
+  level: 'DEBUG' | 'INFO' | 'WARNING' | 'ERROR' | 'CRITICAL';
+  component: string;
+  message: string;
+  data?: any;
+}
+
+// ============================================================================
+// WEBSOCKET
+// ============================================================================
+
+export interface WebSocketMessage {
+  type: 'subscribed' | 'signal_new' | 'position_opened' | 'position_updated' | 
+        'position_closed' | 'tp_hit' | 'sl_hit' | 'system_status' | 'error';
+  data?: any;
+  timestamp?: string;
+}
+
+export interface WebSocketSubscription {
+  type: 'subscribe' | 'unsubscribe';
+  channels: ('signals' | 'positions' | 'system')[];
+}
+
+// ============================================================================
+// UI TYPES
+// ============================================================================
+
+export type Theme = 'dark' | 'light';
+
+export interface FilterOptions {
+  [key: string]: any;
+}
+
+export interface SortOptions {
+  field: string;
+  direction: 'asc' | 'desc';
+}
+
+export interface ChartOptions {
+  height?: number;
+  showGrid?: boolean;
+  showLegend?: boolean;
+  showTooltip?: boolean;
+  animated?: boolean;
 }

@@ -1,148 +1,116 @@
+/**
+ * VELAS - Sidebar Component
+ * Боковое меню навигации
+ */
+
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { cn } from '@/utils';
-import { t } from '@/i18n';
+import { cn } from '@/utils/cn';
 import {
   LayoutDashboard,
   Wallet,
   History,
   Signal,
-  Coins,
+  Activity,
   BarChart3,
-  TestTube,
+  PlayCircle,
   Settings,
   Bell,
   Server,
-  X,
   ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 
-interface NavItem {
-  path: string;
-  label: string;
-  icon: React.ReactNode;
+interface SidebarProps {
+  collapsed: boolean;
+  onToggle: () => void;
 }
 
-const navItems: NavItem[] = [
-  { path: '/', label: 'nav.dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
-  { path: '/positions', label: 'nav.positions', icon: <Wallet className="w-5 h-5" /> },
-  { path: '/history', label: 'nav.history', icon: <History className="w-5 h-5" /> },
-  { path: '/signals', label: 'nav.signals', icon: <Signal className="w-5 h-5" /> },
-  { path: '/pairs', label: 'nav.pairs', icon: <Coins className="w-5 h-5" /> },
-  { path: '/analytics', label: 'nav.analytics', icon: <BarChart3 className="w-5 h-5" /> },
-  { path: '/backtest', label: 'nav.backtest', icon: <TestTube className="w-5 h-5" /> },
-  { path: '/settings', label: 'nav.settings', icon: <Settings className="w-5 h-5" /> },
-  { path: '/alerts', label: 'nav.alerts', icon: <Bell className="w-5 h-5" /> },
-  { path: '/system', label: 'nav.system', icon: <Server className="w-5 h-5" /> },
+const menuItems = [
+  { path: '/', label: 'Панель управления', icon: LayoutDashboard },
+  { path: '/positions', label: 'Позиции', icon: Wallet },
+  { path: '/history', label: 'История', icon: History },
+  { path: '/signals', label: 'Сигналы', icon: Signal },
+  { path: '/pairs', label: 'Пары', icon: Activity },
+  { path: '/analytics', label: 'Аналитика', icon: BarChart3 },
+  { path: '/backtest', label: 'Бэктест', icon: PlayCircle },
+  { path: '/settings', label: 'Настройки', icon: Settings },
+  { path: '/alerts', label: 'Уведомления', icon: Bell },
+  { path: '/system', label: 'Система', icon: Server },
 ];
 
-interface SidebarProps {
-  isOpen: boolean;
-  onClose: () => void;
-  isCollapsed: boolean;
-  onToggleCollapse: () => void;
-}
-
-export const Sidebar: React.FC<SidebarProps> = ({
-  isOpen,
-  onClose,
-  isCollapsed,
-  onToggleCollapse,
-}) => {
+export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
   const location = useLocation();
 
   return (
-    <>
-      {/* Mobile overlay */}
-      {isOpen && (
-        <div
-          className="lg:hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
-          onClick={onClose}
-        />
+    <aside
+      className={cn(
+        'fixed left-0 top-0 h-screen bg-dark-bg-secondary border-r border-dark-border transition-all duration-300 z-30',
+        collapsed ? 'w-20' : 'w-64'
       )}
-
-      {/* Sidebar */}
-      <aside
-        className={cn(
-          'fixed top-16 bottom-0 left-0 z-40',
-          'bg-dark-bg-secondary border-r border-dark-border',
-          'transition-all duration-300 ease-in-out',
-          // Desktop
-          'lg:translate-x-0',
-          isCollapsed ? 'lg:w-16' : 'lg:w-60',
-          // Mobile
-          isOpen ? 'translate-x-0' : '-translate-x-full',
-          'w-72 lg:w-auto'
+    >
+      {/* Logo */}
+      <div className="h-16 flex items-center justify-between px-4 border-b border-dark-border">
+        {!collapsed && (
+          <div>
+            <h1 className="text-xl font-bold text-dark-text-primary">VELAS</h1>
+            <p className="text-xs text-dark-text-muted">Trading System</p>
+          </div>
         )}
-      >
-        {/* Mobile close button */}
-        <div className="lg:hidden flex items-center justify-between p-4 border-b border-dark-border">
-          <span className="font-semibold text-dark-text-primary">Меню</span>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-md hover:bg-dark-bg-tertiary"
-          >
-            <X className="w-5 h-5 text-dark-text-secondary" />
-          </button>
-        </div>
+        <button
+          onClick={onToggle}
+          className={cn(
+            'p-2 rounded-lg hover:bg-dark-bg-hover text-dark-text-secondary transition-colors',
+            collapsed && 'mx-auto'
+          )}
+        >
+          {collapsed ? (
+            <ChevronRight className="w-5 h-5" />
+          ) : (
+            <ChevronLeft className="w-5 h-5" />
+          )}
+        </button>
+      </div>
 
-        {/* Navigation */}
-        <nav className="p-3 space-y-1 overflow-y-auto h-[calc(100%-60px)] lg:h-[calc(100%-40px)]">
-          {navItems.map((item) => {
-            const isActive =
-              item.path === '/'
-                ? location.pathname === '/'
-                : location.pathname.startsWith(item.path);
+      {/* Navigation */}
+      <nav className="p-3">
+        <div className="space-y-1">
+          {menuItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = location.pathname === item.path;
 
             return (
               <NavLink
                 key={item.path}
                 to={item.path}
-                onClick={() => {
-                  // Close mobile sidebar on navigation
-                  if (window.innerWidth < 1024) {
-                    onClose();
-                  }
-                }}
                 className={cn(
-                  'nav-item',
-                  isActive && 'nav-item-active',
-                  isCollapsed && 'lg:justify-center lg:px-0'
+                  'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors',
+                  'hover:bg-dark-bg-hover',
+                  isActive && 'bg-accent-blue/10 text-accent-blue',
+                  !isActive && 'text-dark-text-secondary',
+                  collapsed && 'justify-center'
                 )}
-                title={isCollapsed ? t(item.label) : undefined}
+                title={collapsed ? item.label : undefined}
               >
-                {item.icon}
-                {(!isCollapsed || window.innerWidth < 1024) && (
-                  <span className="whitespace-nowrap">{t(item.label)}</span>
+                <Icon className="w-5 h-5 shrink-0" />
+                {!collapsed && (
+                  <span className="font-medium">{item.label}</span>
                 )}
               </NavLink>
             );
           })}
-        </nav>
-
-        {/* Collapse toggle (desktop only) */}
-        <div className="hidden lg:block absolute bottom-0 left-0 right-0 p-3 border-t border-dark-border">
-          <button
-            onClick={onToggleCollapse}
-            className={cn(
-              'w-full flex items-center gap-3 px-3 py-2 rounded-md',
-              'text-dark-text-secondary hover:text-dark-text-primary hover:bg-dark-bg-tertiary',
-              'transition-colors duration-200',
-              isCollapsed && 'justify-center'
-            )}
-          >
-            <ChevronLeft
-              className={cn(
-                'w-5 h-5 transition-transform duration-300',
-                isCollapsed && 'rotate-180'
-              )}
-            />
-            {!isCollapsed && <span>Свернуть</span>}
-          </button>
         </div>
-      </aside>
-    </>
+      </nav>
+
+      {/* Footer */}
+      {!collapsed && (
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-dark-border">
+          <div className="text-xs text-dark-text-muted">
+            <p>Версия 1.0.0</p>
+            <p className="mt-1">© 2024 VELAS</p>
+          </div>
+        </div>
+      )}
+    </aside>
   );
 };
-
-export default Sidebar;
