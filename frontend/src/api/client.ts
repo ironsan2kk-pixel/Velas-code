@@ -38,10 +38,15 @@ apiClient.interceptors.request.use(
 );
 
 /**
- * Response interceptor - обработка ошибок
+ * Response interceptor - обработка ошибок и извлечение данных из wrapper
  */
 apiClient.interceptors.response.use(
   (response) => {
+    // Если ответ обёрнут в {success, data, ...}, извлекаем data
+    const result = response.data;
+    if (result && typeof result === 'object' && 'success' in result && 'data' in result) {
+      response.data = result.data;
+    }
     return response;
   },
   (error: AxiosError) => {

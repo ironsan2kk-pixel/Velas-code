@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardHeader, CardContent, Badge, Spinner, StatusIndicator } from '@/components/ui';
-import { EquityCurve, MiniChart } from '@/components/charts';
+import { EquityCurve } from '@/components/charts';
 import { 
   useDashboardSummary, 
   useDashboardMetrics, 
@@ -182,11 +182,11 @@ const Dashboard: React.FC = () => {
   const { data: positionsResp, isLoading: positionsLoading } = usePositions('open');
   const { data: signalsResp, isLoading: signalsLoading } = useSignals(1, 10);
 
-  const summary = summaryResp?.data;
-  const metrics = metricsResp?.data;
-  const chartData = chartResp?.data || [];
-  const signals = signalsResp?.data?.data || [];
-  const openPositions = positionsResp?.data || [];
+  const summary = summaryResp;
+  const metrics = metricsResp;
+  const chartData = chartResp || [];
+  const signals = (signalsResp as any)?.data || signalsResp || [];
+  const openPositions = positionsResp || [];
 
   if (summaryLoading) {
     return (

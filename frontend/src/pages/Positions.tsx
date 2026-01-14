@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
-import { Card, CardHeader, CardContent, Badge, Button, Spinner, StatusIndicator } from '@/components/ui';
+import { Card, CardContent, Badge, Button, Spinner } from '@/components/ui';
 import { PositionProgress } from '@/components/charts';
 import { usePositions, useClosePosition } from '@/hooks/useApi';
-import { 
-  TrendingUp, 
-  TrendingDown,
+import {
   Clock,
   BarChart3,
   X,
@@ -235,7 +233,7 @@ const Positions: React.FC = () => {
   const [showFilters, setShowFilters] = useState(false);
 
   const { data: positionsResp, isLoading, refetch, isRefetching } = usePositions('open');
-  const positions = positionsResp?.data || [];
+  const positions = positionsResp || [];
   const closePosition = useClosePosition();
 
   const handleSort = (field: SortField) => {

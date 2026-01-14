@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { 
-  History as HistoryIcon, 
-  Download, 
-  Filter, 
-  Calendar,
+import {
+  History as HistoryIcon,
+  Download,
+  Filter,
   TrendingUp,
   TrendingDown,
   Target,
@@ -13,7 +12,6 @@ import {
   Percent,
   ChevronLeft,
   ChevronRight,
-  ArrowUpDown,
   X
 } from 'lucide-react';
 import { Card, CardHeader, CardContent } from '../components/ui/Card';

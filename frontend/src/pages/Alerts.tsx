@@ -12,7 +12,6 @@ import {
   BellOff,
   Save,
   Search,
-  Filter,
   CheckCircle2,
   AlertTriangle,
   Info,
@@ -20,7 +19,7 @@ import {
   Volume2,
   VolumeX,
 } from 'lucide-react';
-import type { Alert, AlertType, AlertCategory } from '@/types';
+import type { AlertType } from '@/types';
 
 type FilterTab = 'all' | 'unread' | 'trading' | 'portfolio' | 'system' | 'performance';
 
@@ -31,10 +30,10 @@ const Alerts: React.FC = () => {
   const [hasChanges, setHasChanges] = useState(false);
 
   const { data: alertSettingsResp, isLoading: settingsLoading } = useAlertSettings();
-  const alertSettings = alertSettingsResp?.data;
+  const alertSettings = alertSettingsResp;
   const updateAlertSettings = useUpdateAlertSettings();
   const { data: alertHistoryResp, isLoading: historyLoading } = useAlertHistory(page, 20);
-  const alertHistory = alertHistoryResp?.data || [];
+  const alertHistory = alertHistoryResp || [];
 
   // WebSocket for real-time alerts
   useWebSocket({
@@ -87,10 +86,11 @@ const Alerts: React.FC = () => {
   };
 
   // Filter alerts
-  const filteredAlerts = alertHistory?.data.filter((alert) => {
-    const matchesSearch = alert.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         alert.message.toLowerCase().includes(searchQuery.toLowerCase());
-    
+  const alertList = Array.isArray(alertHistory) ? alertHistory : (alertHistory as any)?.data || [];
+  const filteredAlerts = alertList.filter((alert: any) => {
+    const matchesSearch = alert.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         alert.message?.toLowerCase().includes(searchQuery.toLowerCase());
+
     if (activeFilter === 'all') return matchesSearch;
     if (activeFilter === 'unread') return matchesSearch && !alert.read;
     return matchesSearch && alert.category === activeFilter;

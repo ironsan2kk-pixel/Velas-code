@@ -43,11 +43,11 @@ const Analytics: React.FC = () => {
   const { data: correlationResp, isLoading: correlationLoading } = useAnalyticsCorrelation();
 
   // Извлекаем данные из API response
-  const equityData = equityResp?.data || [];
-  const drawdownData = drawdownResp?.data || [];
-  const monthlyData = monthlyResp?.data || [];
-  const pairsData = pairsResp?.data || [];
-  const correlationData = correlationResp?.data;
+  const equityData = equityResp || [];
+  const drawdownData = drawdownResp || [];
+  const monthlyData = monthlyResp || [];
+  const pairsData = pairsResp || [];
+  const correlationData = correlationResp;
 
   // Сортированные пары по P&L
   const sortedPairs = pairsData ? [...pairsData].sort((a, b) => b.pnl_percent - a.pnl_percent) : [];

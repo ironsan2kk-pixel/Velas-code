@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { Card, CardHeader, CardContent, CardFooter, Button, Input, Select, Spinner, Badge } from '@/components/ui';
+import { Card, CardContent, Button, Input, Select, Spinner, Badge } from '@/components/ui';
 import { useSettings, useUpdateSettings, usePresets, useUpdatePreset } from '@/hooks/useApi';
 import { Save, RefreshCw, AlertCircle, CheckCircle2, Settings2, Shield, Bell, Cpu } from 'lucide-react';
 import type { SystemSettings, Preset } from '@/types';
@@ -16,10 +16,10 @@ const Settings: React.FC = () => {
   const [hasChanges, setHasChanges] = useState(false);
   
   const { data: settingsResp, isLoading } = useSettings();
-  const settings = settingsResp?.data;
+  const settings = settingsResp;
   const updateSettings = useUpdateSettings();
   const { data: presetsResp, isLoading: presetsLoading } = usePresets();
-  const presets = presetsResp?.data || [];
+  const presets = presetsResp || [];
   const updatePreset = useUpdatePreset();
 
   const [formData, setFormData] = useState<SystemSettings | null>(null);

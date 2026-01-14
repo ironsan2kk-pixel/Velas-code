@@ -8,11 +8,10 @@ import { Card, CardHeader, CardContent, CardFooter, Button, Input, Select, Spinn
 import {
   useBacktestResults,
   useBacktestResult,
-  useBacktestStatus,
   useRunBacktest,
 } from '@/hooks/useApi';
-import { PlayCircle, Clock, CheckCircle2, XCircle, TrendingUp, Activity, BarChart3 } from 'lucide-react';
-import type { BacktestConfig, BacktestStatus as BStatus } from '@/types';
+import { PlayCircle, Clock, CheckCircle2, XCircle, Activity, BarChart3 } from 'lucide-react';
+import { Timeframe, type BacktestConfig } from '@/types';
 
 // 20 пар
 const PAIRS = [
@@ -38,16 +37,16 @@ const statusLabels = {
 
 const Backtest: React.FC = () => {
   const { data: resultsResp, isLoading: resultsLoading } = useBacktestResults();
-  const results = resultsResp?.data || [];
+  const results = resultsResp || [];
   const runBacktest = useRunBacktest();
-  
+
   const [selectedResultId, setSelectedResultId] = useState<string | null>(null);
   const [showNewBacktestForm, setShowNewBacktestForm] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState<BacktestConfig>({
     symbol: 'BTCUSDT',
-    timeframe: '1h',
+    timeframe: Timeframe.H1,
     start_date: '',
     end_date: '',
     initial_balance: 10000,
@@ -68,7 +67,7 @@ const Backtest: React.FC = () => {
       setShowNewBacktestForm(false);
       setFormData({
         symbol: 'BTCUSDT',
-        timeframe: '1h',
+        timeframe: Timeframe.H1,
         start_date: '',
         end_date: '',
         initial_balance: 10000,

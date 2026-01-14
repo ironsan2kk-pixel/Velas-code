@@ -5,7 +5,7 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardHeader, CardContent, Badge, Spinner, Input, Select } from '@/components/ui';
+import { Card, CardContent, Badge, Spinner, Input, Select } from '@/components/ui';
 import { usePairs } from '@/hooks/useApi';
 import { 
   TrendingUp, 
@@ -15,7 +15,7 @@ import {
   ArrowUpDown,
   Filter,
 } from 'lucide-react';
-import type { Pair, VolatilityRegime } from '@/types';
+import type { Pair } from '@/types';
 
 type SortField = 'symbol' | 'price_change_percent_24h' | 'volume_24h' | 'win_rate' | 'pnl_percent';
 type SortDirection = 'asc' | 'desc';
@@ -23,7 +23,7 @@ type SortDirection = 'asc' | 'desc';
 const Pairs: React.FC = () => {
   const navigate = useNavigate();
   const { data: pairsResp, isLoading } = usePairs();
-  const pairs = pairsResp?.data || [];
+  const pairs = pairsResp || [];
   
   const [searchQuery, setSearchQuery] = useState('');
   const [sectorFilter, setSectorFilter] = useState<string>('all');
