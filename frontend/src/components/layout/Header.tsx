@@ -33,7 +33,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
           </button>
 
           <StatusIndicator
-            status={isError ? 'offline' : isLoading ? 'degraded' : 'online'}
+            status={isError ? 'offline' : isLoading ? 'warning' : 'online'}
             label={isError ? 'ERROR' : isLoading ? 'LOADING' : 'ONLINE'}
             pulse={!isError && !isLoading}
           />

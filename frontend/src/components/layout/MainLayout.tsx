@@ -46,7 +46,7 @@ export const MainLayout: React.FC = () => {
           sidebarCollapsed ? 'ml-20' : 'ml-64'
         )}
       >
-        <Header theme={theme} onThemeToggle={toggleTheme} />
+        <Header />
         
         <main className="mt-16 p-6">
           <Routes>

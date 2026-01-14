@@ -21,9 +21,15 @@ import {
   ChevronRight,
 } from 'lucide-react';
 
-interface SidebarProps {
-  collapsed: boolean;
-  onToggle: () => void;
+export interface SidebarProps {
+  // New props from App.tsx
+  isOpen?: boolean;
+  onClose?: () => void;
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
+  // Legacy props
+  collapsed?: boolean;
+  onToggle?: () => void;
 }
 
 const menuItems = [
@@ -39,8 +45,19 @@ const menuItems = [
   { path: '/system', label: 'Система', icon: Server },
 ];
 
-export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
+export const Sidebar: React.FC<SidebarProps> = ({
+  isOpen,
+  onClose,
+  isCollapsed,
+  onToggleCollapse,
+  collapsed: legacyCollapsed,
+  onToggle: legacyOnToggle,
+}) => {
   const location = useLocation();
+
+  // Support both old and new props
+  const collapsed = isCollapsed ?? legacyCollapsed ?? false;
+  const onToggle = onToggleCollapse ?? legacyOnToggle ?? (() => {});
 
   return (
     <aside

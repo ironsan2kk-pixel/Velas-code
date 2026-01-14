@@ -6,7 +6,8 @@ VELAS - Генератор сигналов.
 
 from typing import Optional, Dict, List
 from datetime import datetime
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from enum import Enum
 import logging
 
 import pandas as pd
@@ -14,6 +15,60 @@ import pandas as pd
 from .velas_core import VelasIndicator, VelasSignal, VelasParams
 
 logger = logging.getLogger(__name__)
+
+
+# =============================================================================
+# ENUMS & TYPES для тестов
+# =============================================================================
+
+class SignalType(str, Enum):
+    """Тип сигнала."""
+    LONG = "LONG"
+    SHORT = "SHORT"
+
+
+class SignalStrength(str, Enum):
+    """Сила сигнала."""
+    WEAK = "weak"
+    MEDIUM = "medium"
+    STRONG = "strong"
+
+
+@dataclass
+class FilterConfig:
+    """Конфигурация фильтров сигналов."""
+    volume_enabled: bool = True
+    volume_multiplier: float = 1.5
+    rsi_enabled: bool = True
+    rsi_period: int = 14
+    rsi_long_level: int = 30
+    rsi_short_level: int = 70
+    adx_enabled: bool = True
+    adx_period: int = 14
+    adx_min_level: int = 20
+
+
+@dataclass
+class Signal:
+    """Базовый сигнал для тестов и внутренней логики."""
+    symbol: str
+    signal_type: SignalType
+    timeframe: str
+    entry_price: float
+    sl_price: float
+    tp_prices: List[float] = field(default_factory=list)
+    strength: SignalStrength = SignalStrength.MEDIUM
+    confidence: float = 0.5
+    volatility_regime: str = "normal"
+    preset_id: str = "default"
+    filters_passed: List[str] = field(default_factory=list)
+    filters_failed: List[str] = field(default_factory=list)
+    created_at: datetime = field(default_factory=datetime.utcnow)
+
+    @property
+    def side(self) -> str:
+        """Направление сделки."""
+        return self.signal_type.value
 
 
 @dataclass

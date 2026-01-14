@@ -8,12 +8,80 @@ import asyncio
 import json
 from typing import Dict, List, Optional, Callable
 from datetime import datetime
+from dataclasses import dataclass
 import logging
 
 import websockets
 from websockets.exceptions import ConnectionClosed
 
 logger = logging.getLogger(__name__)
+
+
+# =============================================================================
+# EVENT DATACLASSES
+# =============================================================================
+
+@dataclass
+class KlineEvent:
+    """Событие свечи (kline)."""
+    symbol: str
+    interval: str
+    open_time: int
+    close_time: int
+    open: float
+    high: float
+    low: float
+    close: float
+    volume: float
+    is_closed: bool
+    quote_volume: float = 0.0
+    trades: int = 0
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "KlineEvent":
+        """Создать из словаря Binance API."""
+        k = data.get("k", data)
+        return cls(
+            symbol=k.get("s", ""),
+            interval=k.get("i", ""),
+            open_time=k.get("t", 0),
+            close_time=k.get("T", 0),
+            open=float(k.get("o", 0)),
+            high=float(k.get("h", 0)),
+            low=float(k.get("l", 0)),
+            close=float(k.get("c", 0)),
+            volume=float(k.get("v", 0)),
+            is_closed=k.get("x", False),
+            quote_volume=float(k.get("q", 0)),
+            trades=int(k.get("n", 0)),
+        )
+
+
+@dataclass
+class TickerEvent:
+    """Событие тикера (24hr ticker)."""
+    symbol: str
+    price: float
+    price_change: float
+    price_change_percent: float
+    high_24h: float
+    low_24h: float
+    volume_24h: float
+    quote_volume_24h: float
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "TickerEvent":
+        """Создать из словаря Binance API."""
+        return cls(
+            symbol=data.get("s", ""),
+            price=float(data.get("c", 0)),
+            price_change=float(data.get("p", 0)),
+            price_change_percent=float(data.get("P", 0)),
+            high_24h=float(data.get("h", 0)),
+            low_24h=float(data.get("l", 0)),
+            volume_24h=float(data.get("v", 0)),
+            quote_volume_24h=float(data.get("q", 0)),
+        )
 
 
 class BinanceWebSocket:
@@ -205,3 +273,7 @@ class MockBinanceWebSocket(BinanceWebSocket):
         """Mock отключение."""
         self.running = False
         logger.info("Mock WebSocket disconnected")
+
+
+# Алиас для совместимости с тестами
+BinanceWebSocketClient = BinanceWebSocket

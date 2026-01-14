@@ -5,6 +5,7 @@ type Theme = 'dark' | 'light';
 
 interface ThemeState {
   theme: Theme;
+  isDark: boolean;
   setTheme: (theme: Theme) => void;
   toggleTheme: () => void;
 }
@@ -13,12 +14,16 @@ export const useThemeStore = create<ThemeState>()(
   persist(
     (set, get) => ({
       theme: 'dark',
-      
+
+      get isDark() {
+        return get().theme === 'dark';
+      },
+
       setTheme: (theme) => {
         set({ theme });
         updateDocumentTheme(theme);
       },
-      
+
       toggleTheme: () => {
         const newTheme = get().theme === 'dark' ? 'light' : 'dark';
         set({ theme: newTheme });
