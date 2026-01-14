@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { Card, CardHeader, CardContent, Button, Spinner, StatusIndicator, Badge, Select } from '@/components/ui';
+import { Card, CardHeader, CardContent, Button, Spinner, StatusIndicator, Select } from '@/components/ui';
 import { useSystemStatus, useSystemLogs, useDownloadLogs, useRestartComponent } from '@/hooks/useApi';
 import {
   Server,
@@ -12,14 +12,13 @@ import {
   Activity,
   Download,
   RefreshCw,
-  AlertCircle,
-  CheckCircle2,
+  Bell,
   XCircle,
   HardDrive,
   Cpu,
   MemoryStick,
 } from 'lucide-react';
-import type { SystemComponent, ComponentStatus, LogEntry } from '@/types';
+import type { ComponentStatus, LogEntry, ComponentStatusDetail } from '@/types';
 
 type LogLevel = 'all' | 'DEBUG' | 'INFO' | 'WARNING' | 'ERROR' | 'CRITICAL';
 
@@ -28,13 +27,11 @@ const System: React.FC = () => {
   const [logLevel, setLogLevel] = useState<LogLevel>('all');
   const [logLimit, setLogLimit] = useState(100);
 
-  const { data: systemStatusResp, isLoading: statusLoading } = useSystemStatus();
-  const systemStatus = systemStatusResp?.data;
-  const { data: logsResp, isLoading: logsLoading } = useSystemLogs(
+  const { data: systemStatus, isLoading: statusLoading } = useSystemStatus();
+  const { data: logs, isLoading: logsLoading } = useSystemLogs(
     logLimit,
     logLevel === 'all' ? undefined : logLevel
   );
-  const logs = logsResp?.data || [];
   const downloadLogs = useDownloadLogs();
   const restartComponent = useRestartComponent();
 
@@ -174,7 +171,7 @@ const System: React.FC = () => {
         <CardContent>
           {systemStatus && Object.keys(systemStatus.components).length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {Object.entries(systemStatus.components).map(([name, component]) => (
+              {Object.entries(systemStatus.components).map(([name, component]: [string, ComponentStatusDetail]) => (
                 <div
                   key={name}
                   className={`p-4 rounded-lg border transition-colors ${
@@ -297,7 +294,7 @@ const System: React.FC = () => {
             <div className="flex justify-center py-8">
               <Spinner />
             </div>
-          ) : logs && logs.length > 0 ? (
+          ) : logs && (logs as LogEntry[]).length > 0 ? (
             <div className="max-h-[600px] overflow-y-auto">
               <table className="w-full text-sm font-mono">
                 <thead className="bg-dark-bg-secondary sticky top-0 z-10">
@@ -317,7 +314,7 @@ const System: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-dark-border">
-                  {logs.map((log, idx) => (
+                  {(logs || []).map((log: LogEntry, idx: number) => (
                     <tr key={idx} className="hover:bg-dark-bg-hover">
                       <td className="px-4 py-2 text-dark-text-muted">
                         {new Date(log.timestamp).toLocaleString('ru-RU', {

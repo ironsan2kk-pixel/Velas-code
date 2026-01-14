@@ -8,39 +8,13 @@ import {
   X,
   ChevronDown,
   ChevronUp,
-  Filter,
   RefreshCw,
   AlertTriangle,
 } from 'lucide-react';
+import type { Position } from '@/types';
 
 type SortField = 'pnl' | 'symbol' | 'duration' | 'entry_time';
 type SortOrder = 'asc' | 'desc';
-
-interface Position {
-  id: number;
-  symbol: string;
-  side: 'LONG' | 'SHORT';
-  timeframe: string;
-  entry_price: number;
-  current_price: number;
-  current_sl: number;
-  original_sl: number;
-  quantity: number;
-  status: string;
-  tp_levels: Array<{
-    level: number;
-    price: number;
-    percent: number;
-    hit: boolean;
-    hit_time?: string;
-  }>;
-  position_left_percent: number;
-  unrealized_pnl: number;
-  unrealized_pnl_percent: number;
-  realized_pnl: number;
-  duration_minutes: number;
-  entry_time: string;
-}
 
 const formatDuration = (minutes: number): string => {
   if (minutes < 60) return `${minutes}м`;

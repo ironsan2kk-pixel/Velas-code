@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-import { Card, CardHeader, CardContent, Badge, Button, Spinner } from '@/components/ui';
+import { Card, CardContent, Badge, Button, Spinner } from '@/components/ui';
 import { useSignals } from '@/hooks/useApi';
-import { 
+import {
   Zap,
   CheckCircle2,
   XCircle,
   Clock,
-  Filter,
   ChevronLeft,
   ChevronRight,
   Send,
@@ -15,34 +14,9 @@ import {
   TrendingDown,
   AlertTriangle,
 } from 'lucide-react';
+import type { Signal } from '@/types';
 
-type SignalStatus = 'all' | 'active' | 'filled' | 'cancelled' | 'pending';
-
-interface Signal {
-  id: number;
-  symbol: string;
-  side: 'LONG' | 'SHORT';
-  timeframe: string;
-  entry_price: number;
-  current_price: number;
-  sl_price: number;
-  tp1_price: number;
-  tp2_price: number;
-  tp3_price: number;
-  tp4_price: number;
-  tp5_price: number;
-  tp6_price: number;
-  status: string;
-  preset_id: string;
-  volatility_regime: string;
-  confidence: number;
-  filters_passed: string[];
-  filters_failed: string[];
-  telegram_sent: boolean;
-  cornix_sent: boolean;
-  created_at: string;
-  executed_at?: string;
-}
+type SignalStatusFilter = 'all' | 'active' | 'filled' | 'cancelled' | 'pending';
 
 const statusConfig = {
   active: { 
@@ -106,18 +80,23 @@ const SignalCard: React.FC<SignalCardProps> = ({ signal }) => {
   const isLong = signal.side === 'LONG';
   
   // Calculate current P&L from entry
-  const pnlPercent = isLong 
-    ? ((signal.current_price - signal.entry_price) / signal.entry_price) * 100
-    : ((signal.entry_price - signal.current_price) / signal.entry_price) * 100;
-  
+  const currentPrice = signal.current_price ?? signal.entry_price;
+  const pnlPercent = isLong
+    ? ((currentPrice - signal.entry_price) / signal.entry_price) * 100
+    : ((signal.entry_price - currentPrice) / signal.entry_price) * 100;
+
+  // Get TP prices from individual fields or tp_levels array
   const tpPrices = [
-    signal.tp1_price,
-    signal.tp2_price,
-    signal.tp3_price,
-    signal.tp4_price,
-    signal.tp5_price,
-    signal.tp6_price,
+    signal.tp1_price ?? signal.tp_levels?.[0] ?? 0,
+    signal.tp2_price ?? signal.tp_levels?.[1] ?? 0,
+    signal.tp3_price ?? signal.tp_levels?.[2] ?? 0,
+    signal.tp4_price ?? signal.tp_levels?.[3] ?? 0,
+    signal.tp5_price ?? signal.tp_levels?.[4] ?? 0,
+    signal.tp6_price ?? signal.tp_levels?.[5] ?? 0,
   ];
+
+  // Get SL price
+  const slPrice = signal.sl_price ?? signal.stop_loss ?? 0;
 
   return (
     <Card className={`border ${status.bg}`}>
@@ -158,7 +137,7 @@ const SignalCard: React.FC<SignalCardProps> = ({ signal }) => {
                 <Send className="w-3 h-3" />
                 TG
               </div>
-              <div className={`flex items-center gap-1 text-xs ${signal.cornix_sent ? 'text-accent-green' : 'text-dark-text-muted'}`}>
+              <div className={`flex items-center gap-1 text-xs ${signal.cornix_sent === true ? 'text-accent-green' : 'text-dark-text-muted'}`}>
                 <MessageCircle className="w-3 h-3" />
                 Cornix
               </div>
@@ -185,7 +164,7 @@ const SignalCard: React.FC<SignalCardProps> = ({ signal }) => {
             <div className="grid grid-cols-7 gap-2">
               <div className="p-2 rounded-lg bg-loss/20 border border-loss/30 text-center">
                 <div className="text-xs text-dark-text-muted">SL</div>
-                <div className="font-medium text-loss text-sm">{formatPrice(signal.sl_price)}</div>
+                <div className="font-medium text-loss text-sm">{formatPrice(slPrice)}</div>
                 <div className="text-xs text-loss">-8.5%</div>
               </div>
               {tpPrices.map((price, index) => (
@@ -202,22 +181,24 @@ const SignalCard: React.FC<SignalCardProps> = ({ signal }) => {
 
             {/* Filters */}
             <div className="flex flex-wrap gap-4">
-              <div>
-                <p className="text-xs text-dark-text-muted mb-2">Фильтры пройдены</p>
-                <div className="flex flex-wrap gap-1">
-                  {signal.filters_passed.map((filter) => (
-                    <Badge key={filter} variant="success" size="sm">
-                      <CheckCircle2 className="w-3 h-3 mr-1" />
-                      {filter}
-                    </Badge>
-                  ))}
+              {(signal.filters_passed ?? []).length > 0 && (
+                <div>
+                  <p className="text-xs text-dark-text-muted mb-2">Фильтры пройдены</p>
+                  <div className="flex flex-wrap gap-1">
+                    {(signal.filters_passed ?? []).map((filter) => (
+                      <Badge key={filter} variant="success" size="sm">
+                        <CheckCircle2 className="w-3 h-3 mr-1" />
+                        {filter}
+                      </Badge>
+                    ))}
+                  </div>
                 </div>
-              </div>
-              {signal.filters_failed.length > 0 && (
+              )}
+              {(signal.filters_failed ?? []).length > 0 && (
                 <div>
                   <p className="text-xs text-dark-text-muted mb-2">Фильтры не пройдены</p>
                   <div className="flex flex-wrap gap-1">
-                    {signal.filters_failed.map((filter) => (
+                    {(signal.filters_failed ?? []).map((filter) => (
                       <Badge key={filter} variant="danger" size="sm">
                         <XCircle className="w-3 h-3 mr-1" />
                         {filter}
@@ -260,7 +241,7 @@ const SignalCard: React.FC<SignalCardProps> = ({ signal }) => {
 
 const Signals: React.FC = () => {
   const [page, setPage] = useState(1);
-  const [statusFilter, setStatusFilter] = useState<SignalStatus>('all');
+  const [statusFilter, setStatusFilter] = useState<SignalStatusFilter>('all');
   const pageSize = 10;
 
   const { data: signalsData, isLoading } = useSignals(
@@ -307,7 +288,7 @@ const Signals: React.FC = () => {
           <button
             key={value}
             onClick={() => {
-              setStatusFilter(value as SignalStatus);
+              setStatusFilter(value as SignalStatusFilter);
               setPage(1);
             }}
             className={`px-3 py-1 text-sm rounded-md transition-colors ${

@@ -142,22 +142,27 @@ export interface TpLevel {
 }
 
 export interface Position {
-  id: string;
+  id: string | number;
   symbol: string;
-  side: Side;
-  timeframe: Timeframe;
+  side: Side | 'LONG' | 'SHORT';
+  timeframe: Timeframe | string;
   entry_price: number;
   quantity: number;
   current_price: number;
   unrealized_pnl: number;
   unrealized_pnl_percent: number;
   stop_loss: number;
+  current_sl?: number;
+  original_sl?: number;
   tp_levels: TpLevel[];
   entry_time: string;
-  duration_hours: number;
-  volatility_regime: VolatilityRegime;
+  duration_hours?: number;
+  duration_minutes?: number;
+  volatility_regime: VolatilityRegime | string;
   preset_id: string;
-  status: PositionStatus;
+  status: PositionStatus | string;
+  position_left_percent?: number;
+  realized_pnl?: number;
 }
 
 export interface PositionDetail extends Position {
@@ -222,24 +227,36 @@ export interface HistoryStats {
 // ============================================================================
 
 export interface Signal {
-  id: string;
+  id: number | string;
   symbol: string;
-  side: Side;
-  timeframe: Timeframe;
+  side: Side | 'LONG' | 'SHORT';
+  timeframe: Timeframe | string;
   entry_price: number;
+  current_price?: number;
   stop_loss: number;
+  sl_price?: number;  // alias for stop_loss
   tp_levels: number[];
+  tp1_price?: number;
+  tp2_price?: number;
+  tp3_price?: number;
+  tp4_price?: number;
+  tp5_price?: number;
+  tp6_price?: number;
   tp_distribution: number[];
   confidence: number;
   created_at: string;
-  expires_at: string;
-  status: SignalStatus;
+  expires_at?: string;
+  executed_at?: string;
+  status: SignalStatus | string;
   filled_at?: string;
   cancelled_reason?: string;
-  volatility_regime: VolatilityRegime;
+  volatility_regime: VolatilityRegime | string;
   preset_id: string;
-  velas_score: number;
+  velas_score?: number;
   telegram_sent: boolean;
+  cornix_sent?: boolean;
+  filters_passed?: string[];
+  filters_failed?: string[];
 }
 
 // ============================================================================
@@ -592,11 +609,14 @@ export interface LogEntry {
 // ============================================================================
 
 export interface WebSocketMessage {
-  type: 'subscribed' | 'signal_new' | 'position_opened' | 'position_updated' | 
+  type: 'subscribed' | 'signal_new' | 'position_opened' | 'position_updated' |
         'position_closed' | 'tp_hit' | 'sl_hit' | 'system_status' | 'error';
   data?: any;
   timestamp?: string;
 }
+
+// Alias for WebSocket events
+export type WSEvent = WebSocketMessage;
 
 export interface WebSocketSubscription {
   type: 'subscribe' | 'unsubscribe';

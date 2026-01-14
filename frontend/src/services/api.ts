@@ -5,24 +5,38 @@ import type {
   DashboardSummary,
   DashboardMetrics,
   Position,
-  PositionSummary,
-  TradeHistory,
+  Trade,
   HistoryStats,
   Signal,
   Pair,
   PairDetail,
   EquityPoint,
   MonthlyStats,
-  PairStats,
-  CorrelationMatrix,
+  PairAnalytics,
+  CorrelationData,
   BacktestConfig,
   BacktestResult,
-  AllSettings,
-  SystemStatusResponse,
+  SystemSettings,
+  TradingSettings,
+  SystemStatus,
   LogEntry,
   Preset,
   OHLCV,
 } from '@/types';
+
+// Combined settings type
+export interface AllSettings {
+  system: SystemSettings;
+  trading: TradingSettings;
+}
+
+// Position summary type
+export interface PositionSummary {
+  total_positions: number;
+  open_positions: number;
+  total_pnl: number;
+  total_pnl_percent: number;
+}
 
 // ===== API Client Configuration =====
 
@@ -64,6 +78,14 @@ api.interceptors.response.use(
   }
 );
 
+// Helper to extract data from ApiResponse
+function extractData<T>(response: { data: ApiResponse<T> }): T {
+  if (!response.data.data) {
+    throw new Error('API response missing data');
+  }
+  return response.data.data;
+}
+
 // ===== API Functions =====
 
 // --- Health & Info ---
@@ -82,19 +104,19 @@ export async function getVersion(): Promise<{ version: string; build: string }> 
 
 export async function getDashboardSummary(): Promise<DashboardSummary> {
   const response = await api.get<ApiResponse<DashboardSummary>>('/dashboard/summary');
-  return response.data.data;
+  return extractData(response);
 }
 
 export async function getDashboardMetrics(): Promise<DashboardMetrics> {
   const response = await api.get<ApiResponse<DashboardMetrics>>('/dashboard/metrics');
-  return response.data.data;
+  return extractData(response);
 }
 
 export async function getDashboardChart(period: '1d' | '1w' | '1m' | '3m' = '1w'): Promise<EquityPoint[]> {
   const response = await api.get<ApiResponse<EquityPoint[]>>('/dashboard/chart', {
     params: { period },
   });
-  return response.data.data;
+  return extractData(response);
 }
 
 // --- Positions ---
@@ -103,22 +125,22 @@ export async function getPositions(status?: 'open' | 'closed'): Promise<Position
   const response = await api.get<ApiResponse<Position[]>>('/positions', {
     params: { status },
   });
-  return response.data.data;
+  return extractData(response);
 }
 
 export async function getPosition(id: number): Promise<Position> {
   const response = await api.get<ApiResponse<Position>>(`/positions/${id}`);
-  return response.data.data;
+  return extractData(response);
 }
 
 export async function closePosition(id: number): Promise<Position> {
   const response = await api.post<ApiResponse<Position>>(`/positions/${id}/close`);
-  return response.data.data;
+  return extractData(response);
 }
 
 export async function getPositionsSummary(): Promise<PositionSummary> {
   const response = await api.get<ApiResponse<PositionSummary>>('/positions/summary');
-  return response.data.data;
+  return extractData(response);
 }
 
 // --- History ---
@@ -128,8 +150,8 @@ export async function getHistory(
   pageSize: number = 20,
   symbol?: string,
   side?: 'LONG' | 'SHORT'
-): Promise<PaginatedResponse<TradeHistory>> {
-  const response = await api.get<PaginatedResponse<TradeHistory>>('/history', {
+): Promise<PaginatedResponse<Trade>> {
+  const response = await api.get<PaginatedResponse<Trade>>('/history', {
     params: { page, page_size: pageSize, symbol, side },
   });
   return response.data;
@@ -139,7 +161,7 @@ export async function getHistoryStats(period?: '7d' | '30d' | '90d' | 'all'): Pr
   const response = await api.get<ApiResponse<HistoryStats>>('/history/stats', {
     params: { period },
   });
-  return response.data.data;
+  return extractData(response);
 }
 
 export async function exportHistory(format: 'csv' | 'xlsx' = 'csv'): Promise<Blob> {
@@ -165,24 +187,24 @@ export async function getSignals(
 
 export async function getPendingSignals(): Promise<Signal[]> {
   const response = await api.get<ApiResponse<Signal[]>>('/signals/pending');
-  return response.data.data;
+  return extractData(response);
 }
 
 export async function getSignal(id: number): Promise<Signal> {
   const response = await api.get<ApiResponse<Signal>>(`/signals/${id}`);
-  return response.data.data;
+  return extractData(response);
 }
 
 // --- Pairs ---
 
 export async function getPairs(): Promise<Pair[]> {
   const response = await api.get<ApiResponse<Pair[]>>('/pairs');
-  return response.data.data;
+  return extractData(response);
 }
 
 export async function getPair(symbol: string): Promise<PairDetail> {
   const response = await api.get<ApiResponse<PairDetail>>(`/pairs/${symbol}`);
-  return response.data.data;
+  return extractData(response);
 }
 
 export async function getPairChart(
@@ -193,14 +215,14 @@ export async function getPairChart(
   const response = await api.get<ApiResponse<OHLCV[]>>(`/pairs/${symbol}/chart`, {
     params: { timeframe, limit },
   });
-  return response.data.data;
+  return extractData(response);
 }
 
 export async function getPairSignals(symbol: string, limit: number = 10): Promise<Signal[]> {
   const response = await api.get<ApiResponse<Signal[]>>(`/pairs/${symbol}/signals`, {
     params: { limit },
   });
-  return response.data.data;
+  return extractData(response);
 }
 
 // --- Analytics ---
@@ -209,85 +231,85 @@ export async function getEquityCurve(period: '1w' | '1m' | '3m' | '6m' | '1y' = 
   const response = await api.get<ApiResponse<EquityPoint[]>>('/analytics/equity', {
     params: { period },
   });
-  return response.data.data;
+  return extractData(response);
 }
 
 export async function getDrawdownChart(period: '1w' | '1m' | '3m' | '6m' | '1y' = '1m'): Promise<EquityPoint[]> {
   const response = await api.get<ApiResponse<EquityPoint[]>>('/analytics/drawdown', {
     params: { period },
   });
-  return response.data.data;
+  return extractData(response);
 }
 
 export async function getMonthlyStats(): Promise<MonthlyStats[]> {
   const response = await api.get<ApiResponse<MonthlyStats[]>>('/analytics/monthly');
-  return response.data.data;
+  return extractData(response);
 }
 
-export async function getPairAnalytics(): Promise<PairStats[]> {
-  const response = await api.get<ApiResponse<PairStats[]>>('/analytics/pairs');
-  return response.data.data;
+export async function getPairAnalytics(): Promise<PairAnalytics[]> {
+  const response = await api.get<ApiResponse<PairAnalytics[]>>('/analytics/pairs');
+  return extractData(response);
 }
 
-export async function getCorrelationMatrix(): Promise<CorrelationMatrix> {
-  const response = await api.get<ApiResponse<CorrelationMatrix>>('/analytics/correlation');
-  return response.data.data;
+export async function getCorrelationMatrix(): Promise<CorrelationData> {
+  const response = await api.get<ApiResponse<CorrelationData>>('/analytics/correlation');
+  return extractData(response);
 }
 
 // --- Backtest ---
 
 export async function runBacktest(config: BacktestConfig): Promise<{ id: string }> {
   const response = await api.post<ApiResponse<{ id: string }>>('/backtest/run', config);
-  return response.data.data;
+  return extractData(response);
 }
 
 export async function getBacktestStatus(id: string): Promise<BacktestResult> {
   const response = await api.get<ApiResponse<BacktestResult>>(`/backtest/status/${id}`);
-  return response.data.data;
+  return extractData(response);
 }
 
 export async function getBacktestResults(): Promise<BacktestResult[]> {
   const response = await api.get<ApiResponse<BacktestResult[]>>('/backtest/results');
-  return response.data.data;
+  return extractData(response);
 }
 
 export async function getBacktestResult(id: string): Promise<BacktestResult> {
   const response = await api.get<ApiResponse<BacktestResult>>(`/backtest/results/${id}`);
-  return response.data.data;
+  return extractData(response);
 }
 
 // --- Settings ---
 
 export async function getSettings(): Promise<AllSettings> {
   const response = await api.get<ApiResponse<AllSettings>>('/settings');
-  return response.data.data;
+  return extractData(response);
 }
 
 export async function updateSettings(settings: Partial<AllSettings>): Promise<AllSettings> {
   const response = await api.put<ApiResponse<AllSettings>>('/settings', settings);
-  return response.data.data;
+  return extractData(response);
 }
 
 export async function getPresets(): Promise<Preset[]> {
   const response = await api.get<ApiResponse<Preset[]>>('/settings/presets');
-  return response.data.data;
+  return extractData(response);
 }
 
 export async function getPreset(id: string): Promise<Preset> {
   const response = await api.get<ApiResponse<Preset>>(`/settings/presets/${id}`);
-  return response.data.data;
+  return extractData(response);
 }
 
 export async function updatePreset(id: string, preset: Partial<Preset>): Promise<Preset> {
   const response = await api.put<ApiResponse<Preset>>(`/settings/presets/${id}`, preset);
-  return response.data.data;
+  return extractData(response);
 }
 
 // --- System ---
 
-export async function getSystemStatus(): Promise<SystemStatusResponse> {
-  const response = await api.get<ApiResponse<SystemStatusResponse>>('/system/status');
-  return response.data.data;
+export async function getSystemStatus(): Promise<SystemStatus> {
+  const response = await api.get<ApiResponse<SystemStatus>>('/system/status');
+  return extractData(response);
 }
 
 export async function getSystemLogs(
@@ -298,7 +320,7 @@ export async function getSystemLogs(
   const response = await api.get<ApiResponse<LogEntry[]>>('/system/logs', {
     params: { level, component, limit },
   });
-  return response.data.data;
+  return extractData(response);
 }
 
 export async function downloadLogs(): Promise<Blob> {
@@ -310,17 +332,17 @@ export async function downloadLogs(): Promise<Blob> {
 
 export async function pauseTrading(): Promise<{ success: boolean }> {
   const response = await api.post<ApiResponse<{ success: boolean }>>('/system/pause');
-  return response.data.data;
+  return extractData(response);
 }
 
 export async function resumeTrading(): Promise<{ success: boolean }> {
   const response = await api.post<ApiResponse<{ success: boolean }>>('/system/resume');
-  return response.data.data;
+  return extractData(response);
 }
 
 export async function restartComponent(component: string): Promise<{ success: boolean }> {
   const response = await api.post<ApiResponse<{ success: boolean }>>('/system/restart', { component });
-  return response.data.data;
+  return extractData(response);
 }
 
 export default api;
