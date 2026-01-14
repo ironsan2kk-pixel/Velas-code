@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 import { StatusIndicator, Badge } from '@/components/ui';
-import { useDashboardSummary } from '@/hooks/useApi';
+import { useDashboardSummary, useAlertHistory } from '@/hooks/useApi';
 import { useWebSocket } from '@/hooks/useWebSocket';
 import { useThemeStore } from '@/stores';
 import { Sun, Moon, Bell, Wifi, WifiOff, ChevronDown, Menu } from 'lucide-react';
@@ -16,12 +16,18 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const { data: summary, isLoading, isError } = useDashboardSummary();
+  const { data: alertData } = useAlertHistory(1, 5);
   const { isConnected } = useWebSocket();
   const { isDark, toggleTheme } = useThemeStore();
 
-  const notifications = [
-    { id: '1', type: 'success' as const, title: 'System Ready', message: 'VELAS initialized', time: 'now' },
-  ];
+  // Уведомления из API (последние 5 непрочитанных)
+  const notifications = alertData?.items?.filter(a => !a.read).slice(0, 5).map(alert => ({
+    id: String(alert.id),
+    type: alert.type as 'success' | 'warning' | 'error' | 'info',
+    title: alert.title,
+    message: alert.message || '',
+    time: new Date(alert.created_at).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
+  })) || [];
 
   return (
     <header className="fixed top-0 left-0 right-0 h-16 bg-dark-bg-secondary border-b border-dark-border z-30 lg:left-60">
