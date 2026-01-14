@@ -131,9 +131,61 @@ class SystemLogModel(Base):
 class SettingModel(Base):
     """Модель настроек."""
     __tablename__ = "settings"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     key = Column(String(100), unique=True, nullable=False, index=True)
     value = Column(JSON, nullable=True)
     description = Column(String(500), nullable=True)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class AlertModel(Base):
+    """Модель алерта/уведомления."""
+    __tablename__ = "alerts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    type = Column(String(20), nullable=False)  # info, success, warning, error
+    category = Column(String(30), nullable=False)  # trading, system, portfolio, performance
+    title = Column(String(200), nullable=False)
+    message = Column(Text, nullable=True)
+    read = Column(Boolean, default=False)
+    acknowledged = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+
+
+class PresetModel(Base):
+    """Модель пресета торговых параметров."""
+    __tablename__ = "presets"
+
+    id = Column(Integer, primary_key=True, index=True)
+    preset_id = Column(String(100), unique=True, nullable=False, index=True)
+    symbol = Column(String(20), nullable=False, index=True)
+    timeframe = Column(String(10), nullable=False)
+    volatility_regime = Column(String(20), nullable=False)
+
+    # VELAS indicator parameters
+    i1 = Column(Integer, default=20)
+    i2 = Column(Integer, default=35)
+    i3 = Column(Integer, default=10)
+    i4 = Column(Integer, default=15)
+    i5 = Column(Integer, default=12)
+
+    # Take profits (%)
+    tp1 = Column(Float, default=1.0)
+    tp2 = Column(Float, default=2.0)
+    tp3 = Column(Float, default=3.0)
+    tp4 = Column(Float, default=4.0)
+    tp5 = Column(Float, default=7.5)
+    tp6 = Column(Float, default=14.0)
+
+    # Stop loss (%)
+    sl = Column(Float, default=8.5)
+
+    # TP distribution
+    tp_distribution = Column(JSON, default=[10.0, 10.0, 10.0, 20.0, 25.0, 25.0])
+
+    # Filters
+    filters = Column(JSON, default=["volume", "rsi", "adx"])
+
+    enabled = Column(Boolean, default=True)
+    last_updated = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

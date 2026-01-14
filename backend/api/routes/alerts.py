@@ -1,22 +1,20 @@
 """
 VELAS API - Alerts Routes
+Работа с уведомлениями через базу данных.
 """
 
-from fastapi import APIRouter, Query
-from datetime import datetime, timedelta
-from typing import Optional
-import random
+from fastapi import APIRouter, Query, Depends
+from sqlalchemy.orm import Session
+from datetime import datetime
 
-from ..models import (
-    ApiResponse,
-    PaginatedResponse,
-)
+from backend.db.database import get_db
+from backend.db.models import AlertModel, SettingModel
+from ..models import ApiResponse
 
 router = APIRouter()
 
-
-# Mock alert settings
-MOCK_ALERT_SETTINGS = {
+# Default alert settings (stored in DB on first use)
+DEFAULT_ALERT_SETTINGS = {
     "enabled": True,
     "telegram_enabled": True,
     "desktop_enabled": True,
@@ -51,107 +49,114 @@ MOCK_ALERT_SETTINGS = {
 }
 
 
-def generate_mock_alerts(page: int = 1, page_size: int = 20):
-    """Generate mock alert history."""
-    alert_templates = [
-        {
-            "type": "warning",
-            "category": "trading",
-            "title": "3 убыточных сделки подряд",
-            "message": "SOLUSDT — рассмотрите паузу",
-        },
-        {
-            "type": "success",
-            "category": "trading",
-            "title": "Позиция закрыта с прибылью",
-            "message": "BTCUSDT LONG закрыта с +8.5%",
-        },
-        {
-            "type": "info",
-            "category": "system",
-            "title": "Алгоритм обновлён",
-            "message": "Новые параметры для ETHUSDT",
-        },
-        {
-            "type": "error",
-            "category": "system",
-            "title": "Ошибка подключения к Binance",
-            "message": "Переподключение через 30 секунд",
-        },
-        {
-            "type": "warning",
-            "category": "portfolio",
-            "title": "Высокая корреляция портфеля",
-            "message": "3 позиции в группе Layer1",
-        },
-        {
-            "type": "success",
-            "category": "performance",
-            "title": "Win Rate выше целевого",
-            "message": "Текущий WR: 72.5% (цель: 70%)",
-        },
-        {
-            "type": "warning",
-            "category": "performance",
-            "title": "Приближение к лимиту просадки",
-            "message": "Текущая DD: 12.8% (лимит: 15%)",
-        },
-        {
-            "type": "info",
-            "category": "trading",
-            "title": "Новый сигнал",
-            "message": "ARBUSDT SHORT — confidence 85%",
-        },
-    ]
-    
-    total_alerts = 50
-    alerts = []
-    
-    start_idx = (page - 1) * page_size
-    end_idx = min(start_idx + page_size, total_alerts)
-    
-    for i in range(start_idx, end_idx):
-        template = alert_templates[i % len(alert_templates)]
-        timestamp = datetime.utcnow() - timedelta(hours=i * 2, minutes=random.randint(0, 59))
-        
-        alerts.append({
-            "id": f"alert_{i+1}",
-            "type": template["type"],
-            "category": template["category"],
-            "title": template["title"],
-            "message": template["message"],
-            "created_at": timestamp.isoformat(),
-            "read": i < 10,  # Первые 10 прочитаны
-            "acknowledged": i < 5,  # Первые 5 подтверждены
-        })
-    
-    return {
-        "data": alerts,
-        "total": total_alerts,
-        "page": page,
-        "page_size": page_size,
-        "total_pages": (total_alerts + page_size - 1) // page_size,
-    }
-
-
 @router.get("/settings")
-async def get_alert_settings():
-    """Get current alert settings."""
-    return ApiResponse(success=True, data=MOCK_ALERT_SETTINGS, timestamp=datetime.utcnow().isoformat())
+async def get_alert_settings(db: Session = Depends(get_db)):
+    """Get current alert settings from database."""
+    setting = db.query(SettingModel).filter(SettingModel.key == "alert_settings").first()
+
+    if setting and setting.value:
+        return ApiResponse(success=True, data=setting.value)
+
+    return ApiResponse(success=True, data=DEFAULT_ALERT_SETTINGS)
 
 
 @router.put("/settings")
-async def update_alert_settings(settings: dict):
-    """Update alert settings."""
-    # В реальной системе здесь будет сохранение в БД
-    return ApiResponse(success=True, data={**MOCK_ALERT_SETTINGS, **settings}, timestamp=datetime.utcnow().isoformat())
+async def update_alert_settings(settings: dict, db: Session = Depends(get_db)):
+    """Update alert settings in database."""
+    setting = db.query(SettingModel).filter(SettingModel.key == "alert_settings").first()
+
+    if setting:
+        setting.value = settings
+    else:
+        setting = SettingModel(key="alert_settings", value=settings)
+        db.add(setting)
+
+    db.commit()
+    return ApiResponse(success=True, data=settings)
 
 
 @router.get("/history")
 async def get_alert_history(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
+    db: Session = Depends(get_db),
 ):
-    """Get alert history with pagination."""
-    data = generate_mock_alerts(page, page_size)
-    return ApiResponse(success=True, data=data, timestamp=datetime.utcnow().isoformat())
+    """Get alert history from database with pagination."""
+    total = db.query(AlertModel).count()
+    offset = (page - 1) * page_size
+
+    alerts = (
+        db.query(AlertModel)
+        .order_by(AlertModel.created_at.desc())
+        .offset(offset)
+        .limit(page_size)
+        .all()
+    )
+
+    alert_list = [
+        {
+            "id": str(alert.id),
+            "type": alert.type,
+            "category": alert.category,
+            "title": alert.title,
+            "message": alert.message,
+            "created_at": alert.created_at.isoformat() if alert.created_at else None,
+            "read": alert.read,
+            "acknowledged": alert.acknowledged,
+        }
+        for alert in alerts
+    ]
+
+    return ApiResponse(
+        success=True,
+        data={
+            "data": alert_list,
+            "total": total,
+            "page": page,
+            "page_size": page_size,
+            "total_pages": (total + page_size - 1) // page_size if total > 0 else 0,
+        },
+    )
+
+
+@router.post("")
+async def create_alert(
+    alert_type: str,
+    category: str,
+    title: str,
+    message: str = None,
+    db: Session = Depends(get_db),
+):
+    """Create a new alert."""
+    alert = AlertModel(
+        type=alert_type,
+        category=category,
+        title=title,
+        message=message,
+    )
+    db.add(alert)
+    db.commit()
+    db.refresh(alert)
+
+    return ApiResponse(success=True, data={"id": alert.id})
+
+
+@router.put("/{alert_id}/read")
+async def mark_alert_read(alert_id: int, db: Session = Depends(get_db)):
+    """Mark alert as read."""
+    alert = db.query(AlertModel).filter(AlertModel.id == alert_id).first()
+    if alert:
+        alert.read = True
+        db.commit()
+    return ApiResponse(success=True, data={"id": alert_id, "read": True})
+
+
+@router.put("/{alert_id}/acknowledge")
+async def acknowledge_alert(alert_id: int, db: Session = Depends(get_db)):
+    """Acknowledge alert."""
+    alert = db.query(AlertModel).filter(AlertModel.id == alert_id).first()
+    if alert:
+        alert.acknowledged = True
+        alert.read = True
+        db.commit()
+    return ApiResponse(success=True, data={"id": alert_id, "acknowledged": True})
